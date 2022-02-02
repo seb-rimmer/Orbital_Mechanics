@@ -1,0 +1,37 @@
+Hohmann transfer semi-major axis: 56000.0 km
+Apoapse Velocity: 0.689 km
+Periapse Velocity: 10.333 km
+Orbit 1 circ velocity: 7.546
+Orbit 2 circ velocity: 1.948
+Delta v1 Velocity: 2.787 km
+Delta v2 Velocity: 1.260 km
+Total dV: 4.046 km
+
+Hohmann transfer semi-major axis (bi-elliptic): 108500.0 km
+2.07) Semimajor axis for transfer from the 7000 km orbit to the 210000 km orbit (km): 108500.000
+2.08) Velocity at perigee on the first leg (i.e. first Hohmann transfer)  
+      for the Bielliptic transfer (km/s): 10.498
+2.09) Delta V to get from the circular 7000 km orbit onto the first leg
+      (i.e. first Hohmann transfer) for the Bielliptic transfer: 2.952 km/s
+
+2.10) Velocity at apogee on the first leg (i.e. first Hohmann transfer)
+      for the Bielliptic transfer (km/s): 0.350 km/s
+
+2.11) Semimajor axis for transfer from the 210000 km orbit to the 105000 km orbit: 157500.0 km/s
+
+2.12) Velocity at apogee on the second leg (i.e. second Hohmann transfer)
+      for the Bielliptic transfer (km/s): 1.125 km/s
+
+2.13) Delta V to transfer from the first leg (i.e. first Hohmann transfer)
+      to the second leg (i.e. second Hohmann transfer) for the Bielliptic 
+      transfer: 0.775 km/s
+
+2.14) Velocity at perigee on the second leg (i.e. second Hohmann transfer)
+      for the Bielliptic transfer: 2.250 km/s
+
+2.15) Delta V to get from the second leg (i.e. second Hohmann transfer)
+      onto the circular orbit of radius 105000 km: 0.301 km/s
+
+2.16) Total DV for the Bielliptic transfer: 4.046 km/s
+
+2.17) Radius of intermediate orbit such that the other transfer option requires less DV: 127330.000 km 

@@ -1,0 +1,28 @@
+[
+            {
+        "title": "Semi-Major axis variation across 10 orbits \nwith J2 Pertubations",
+        "filename": "a_vary_j2.png",
+        "y_axis_label": "Semi-major axis, a (km)"
+    },
+        {
+        "title": "Eccentricity variation across 10 orbits \nwith J2 Pertubations",
+        "filename": "e_vary_j2.png",
+        "y_axis_label": "Eccentricity, e, (dimensionless)"
+    },
+    {
+        "title": "Angle of Inclination variation across 10 orbits \nwith J2 Pertubations",
+        "filename": "i_vary_j2.png",
+        "y_axis_label": "Angle of inclination, i (degrees)"
+    },
+            {
+        "title": "Right Ascension of ascending node across 10 orbits \nwith J2 Pertubations",
+        "filename": "omg_vary_j2.png",
+        "y_axis_label": "RAoAN, Omega, (degrees)"
+    },
+
+        {
+        "title": "Argument of Periapse variation across 10 orbits \nwith J2 Pertubations",
+        "filename": "w_vary_j2.png",
+        "y_axis_label": "Arg of Periapse, w, (degrees)"
+    }
+]

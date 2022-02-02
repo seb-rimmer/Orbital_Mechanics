@@ -1,0 +1,19 @@
+Q1.1 - Radius vector:
+       (-3682.354, 5198.614, 1907.142) km
+     - Radius Magnitude : 6650.000 km, altitudeorb_elems_list of 272 km
+Q1.2 - Velocity vector (km/s):
+       (-4.854, -4.884, 3.941) km/s
+     - Velocity Magnitude : 7.933 km/s
+Q1.3 - J2 Perturbing acceleration vector at t=0 due to J2 perturbation only (km/s^2):
+       (4.39e-06, -6.2e-06, -1e-05) km^2/s
+Q1.4 - r after 10 orbits,  Position vector (km) after propagation for 10 orbit periods
+     - No pertubation (J2=0): (-3682.352, 5198.615, 1907.14) km, 6650.000 km
+     - WITH PERTUBATION (J2!=0): (-4045.759, 4662.348, 2475.782) km, 6650.951 km
+Q1.5 - v after 10 orbits, Velocity vector (km/s) after propagation for 10 orbit periods.
+     - No pertubation (J2=0): (-4.854, -4.884, 3.941) km/s, 7.933 km/s
+     - WITH PERTUBATION (J2!=0): (-4.396, -5.615, 3.471) km/s, 7.932 km/s
+Q1.7 - Semimajor axis (km) after 10 orbits: 6998.759
+Q1.8 - Eccentricity after 10 orbits: 0.050
+Q1.9 - Inclination (deg) after 10 orbits: 34.993
+Q1.10 - Omega, Right Ascension of ascending node (deg) after 10 orbit periods: 95.995
+Q1.11 - Argument of periapse (deg) after 10 orbit periods: 35.860

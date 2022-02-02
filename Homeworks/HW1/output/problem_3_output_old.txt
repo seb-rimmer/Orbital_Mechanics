@@ -1,0 +1,10 @@
+v mag: 6.234567106062778, r mag: 8987.978829246373
+Semi major axis : 7999.772
+E mag: 0.12503
+Orbit time period is: 7120.78 seconds
+h value: 56025.571
+E0 value  2.986701263916484
+F value:  -0.78, G value:  296.25
+r_1 value could be: [ 6633.97569879 -2736.08989821  -482.32129966], with a magnitude of 7192.25
+v_1 value could be: [1.79422736 7.32365971 1.29084208], with a magnitude of 7.65
+last rt is : [ 6633.97569879 -2736.08989821  -482.32129966]
