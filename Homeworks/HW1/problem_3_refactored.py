@@ -27,8 +27,6 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-from HW1.problem_3_old import r_as_function_of_t
-
 
 def a_from_vectors(r_vector: dict,
                    v_vector: dict,
@@ -110,17 +108,12 @@ def kepler_E_solution_iteration(eccentricity, n, delta_t, E_0):
         dgdE = 1 - eccentricity * math.cos(E_iter)
 
         E_1 = E_iter - g / dgdE
+
         # updates
         E_iter = E_1
         i += 1
-        print(g, dgdE, E_iter, i)
 
-    # Adjusting E_iter if > 2 pi
-    # if E_iter > (math.pi * 2):
-    #     while E_iter > (math.pi * 2):
-    #         E_iter -= math.pi * 2
-
-    return E_iter  # 3.37
+    return E_iter
 
 
 def f_value_for_r_t1(semi_maj_ax: float,
@@ -169,6 +162,31 @@ def g_dot_value_for_v_t1(semi_maj_ax: float,
     return G_dot_value
 
 
+def r_as_function_of_t(mu, e, a, E0, r0_vector, v0_vector, dt):
+    """
+    Return radius vector for the given input values - Calculates new F and G
+
+    :param mu: gravitational constant for central body
+    :param e: eccentricity
+    :param a: semi-major axis
+    :param E0: value of initial eccentric anomaly
+    :param r0_vector: initial state of r
+    :param v0_vector: initial state of v
+    :param dt: timestep for new E since E0
+    :return: new r vector from calculation involing F and G
+    """
+    n = (mu / (a ** 3)) ** 0.5
+
+    E_t = kepler_E_solution_iteration(e, n, dt, E0)
+
+    F_value = 1 - (a / np.linalg.norm(r0_vector) * (1 - math.cos(E_t - E0)))
+    G_value = dt - ((a ** 3 / mu) ** 0.5) * ((E_t - E0) - math.sin(E_t - E0))
+
+    r_t1 = F_value * np.array(r0_vector) + G_value * np.array(v0_vector)
+
+    return r_t1
+
+
 def sf_vector(vector_arr: np.ndarray, num_sig_fig) -> list:
     """
     Simple function that just returns vector array with values at a specfied number of sig figs
@@ -212,7 +230,6 @@ def check_r_and_v_with_h(h_mag_value: float,
 
     cross_product = np.cross(r_vector, v_vector)
     mag = np.linalg.norm(cross_product)
-    print(mag, h_mag_value)
 
     if (mag - h_mag_value) < 0.1:
 
@@ -224,8 +241,8 @@ def check_r_and_v_with_h(h_mag_value: float,
 def main():
 
     # Some test vectors for a lecture example (Lec 5 slide 6)
-    test_r_t0_vector = [-4743, 4743, 0]  # km
-    test_v_t0_vector = [-5.879, -4.223, 0]  # km/s
+    test_r_t0_vector = np.array([-4743, 4743, 0])  # km
+    test_v_t0_vector = np.array([-5.879, -4.223, 0])  # km/s
     test_delta_t = 600  # seconds
 
     # Answers:
@@ -233,8 +250,8 @@ def main():
     # v_t1_vector = [1.603, -6.503, 0]       # km/s
 
     # Data from question
-    hw_problem_r_t0_vector = [-8903.833, 1208.356, 213.066]  # km
-    hw_problem_v_t0_vector = [-0.971, -6.065, -1.069]  # km/s
+    hw_problem_r_t0_vector = np.array([-8903.833, 1208.356, 213.066])  # km
+    hw_problem_v_t0_vector = np.array([-0.971, -6.065, -1.069])  # km/s
     hw_problem_delta_t = 3600 * 3  # seconds
 
     # Answers:
@@ -342,29 +359,26 @@ def main():
         with open('output/problem_3_output_new.txt', 'a') as output:
             output.write(intro_string + calculated_parameters)
 
-    # t_step = [i for i in range(0, 3*3600, 1)]
     t_step = np.linspace(0, 3 * 3600, 100)
-    r_steps = [r_as_function_of_t(e, a, E0, r0_t, v0_t, i) for i in t_step]
+    r_steps = [r_as_function_of_t(mu_Earth, e[1], a, E0, hw_problem_r_t0_vector, hw_problem_v_t0_vector, i) for i in t_step]
 
-    # x, y, z = [r[0] for r in r_steps], [r[1] for r in r_steps], [r[2] for r in r_steps]
-
-    # print(f"last rt is : {r_steps[-1]}")
+    x, y, z = [r[0] for r in r_steps], [r[1] for r in r_steps], [r[2] for r in r_steps]
 
     fig = plt.figure()
     ax1 = plt.axes(projection='3d')
 
-    # ax1.scatter3D(x, y, z, s=10, label="Plot of r(t) vector between t=0 and t=3 hours")
-    # ax1.scatter3D([0], [0], [0], c='g', s=6378*2)
-    # ax1.scatter3D([0], [0], [0], c='g', s=10, label="Representation of Earth (radius=6378km)")
+    ax1.scatter3D(x, y, z, s=10, label="Plot of r(t) vector between t=0 and t=3 hours")
+    ax1.scatter3D([0], [0], [0], c='g', s=6378*2)
+    ax1.scatter3D([0], [0], [0], c='g', s=10, label="Representation of Earth (radius=6378km)")
 
     ax1.set_xlabel("i vector direction (x, km)")
     ax1.set_ylabel("j vector direction (y, km)")
     ax1.set_zlabel("k vector direction (z, km)")
 
-    # ax1.legend()
-    # fig.savefig("rt_vector_plot_in_space.png")
+    ax1.legend()
+    fig.savefig("plots/rt_vector_plot_in_space.png")
 
-    # plt.show()
+    plt.show()
 
     return 0
 

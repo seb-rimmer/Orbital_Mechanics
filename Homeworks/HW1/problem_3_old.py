@@ -67,7 +67,7 @@ def r_as_function_of_t(e, a, E0, r0_vector, v0_vector, dt):
     F_value = 1 - (a / np.linalg.norm(r0_vector) * (1 - math.cos(E_t - E0)))
     G_value = dt - ((a ** 3 / mu_Earth) ** 0.5) * ((E_t - E0) - math.sin(E_t - E0))
 
-    r_t1 = F_value * r0_vector + G_value * v0_vector
+    r_t1 = F_value * np.array(r0_vector) + G_value * np.array(v0_vector)
 
     # print(E_t, dt, r_t1)
     return r_t1
