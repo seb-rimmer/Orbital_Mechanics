@@ -1,0 +1,40 @@
+HW2 Problem 1 - orbital elements from r and v vectors.
+------------------------------------------------------
+Case 1:  radius vector [-6115.75, -6586.18, -58.65] velocity vector [4.42, -4.26, -1.08]
+Case 2:  radius vector [6590, 0, 0] velocity vector [0.0, 10.153, 1.247]
+
+Case 1 values:
+---------------------------
+Radius vector (mag):                 8987.970
+Velocity vector (mag):               6.233
+Eccentricity (mag, vector):          0.125, (0.072, 0.102, 0.004)
+Semi-maj axis (mag):                 7996.640 km
+h value (mag, vector):               56011.515, (6863.225, -6864.243, 55164.011)
+n value (mag, vector):               0.173, (0.123, 0.123, -0.0)
+Inclination (degrees, radians):      9.980, 0.174
+RAoAN (degrees, radians):            44.996, 0.785
+Arg of periapse (degrees, radians):  9.956, 0.174
+True Anomaly f (degrees, radians):   172.202, 3.005
+Altitude at periapse (km):           615.385
+Altitude at apoapse (km):            2621.895
+
+Case 2 values:
+---------------------------
+Radius vector (mag):                 6590.000
+Velocity vector (mag):               10.229
+Eccentricity (mag, vector):          0.730, (0.73, 0.0, 0.0)
+Semi-maj axis (mag):                 24404.953 km
+h value (mag, vector):               67411.035, (0.0, -8217.73, 66908.27)
+n value (mag, vector):               0.122, (0.122, 0.0, -0.0)
+Inclination (degrees, radians):      7.002, 0.122
+RAoAN (degrees, radians):            0.000, 0.000
+Arg of periapse (degrees, radians):  0.000, 0.000
+True Anomaly f (degrees, radians):   0.000, 0.000
+Altitude at periapse (km):           212.000
+Altitude at apoapse (km):            35841.905
+
+Case 1 is in a LEO because the mean orbit altitude is between 200 and 2000km
+----------------------------------------------------------------------------------
+Case 2 is in a GTO because it is on a highly elliptical orbit, with the apoapse
+coinciding with the GEO altitude and periapse coinciding with a LEO altitude; it
+is likely it will perform some manoeuvre at apoapse to permanently move to GEO.

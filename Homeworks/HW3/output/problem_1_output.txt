@@ -1,0 +1,35 @@
+Distance Unit 1-AU: 149597871 km
+Time Unit 1-TU:     5022878 seconds
+---------------------------------------------------
+Earth r1 at t0: 1.0155
+Apophis r2 at t1: 1.0599
+1.1) Magnitude of Earth's position vector (AU): (-0.7585, -0.6517, 0.0002)
+1.2) Magnitude of Apophis' position vector (AU): (-0.4951, 0.8669, -0.058)
+1.3) Chord (AU): 1.6007
+1.4) Semiperimeter (AU): 1.8381
+1.5) Minimum semimajor axis (AU): 0.9190
+1.6) Angle between the position vectors (radians). You may need to use 2*pi-theta to
+     prevent a retrograde orbit transfer. As a check, the z-component of the angular
+     momentum vector will be positive for prograde orbits and negative for retrograde
+     orbits.
+     Theta: 4.5219
+1.7) Minimum transfer time: 2.8247 time units (164.2153 days)
+1.8) Semimajor axis (AU) after iterating (if using fzero in MATLAB, use a_guess = 1.1 AU) 1.2378
+1.9) Unit vector in the direction of r1 (0.637035, -0.761724, 2e-05)
+1.10) Unit vector in the direction of r2 (0.637035, -0.761724, 2e-05)
+1.11) u_c (see notes) (0.637035, -0.761724, 2e-05)
+1.12) alpha (radians) 4.206063
+1.13) beta (radians) -0.629617
+1.14) A (AU/TU) (see notes): -0.26466929
+1.15) B (AU/TU) (see notes): -1.38009878
+1.16) Velocity at the start of the Lambert transfer (AU/TU), after the burn: (0.5938, -0.8972, 0.0631)
+1.17) Earth's velocity at the time of departure (AU/TU): (0.637035, -0.761724, 2e-05)
+1.18) Departure delta V (km/s) at departure: 
+      Delta-V vector (AU/TU) : (-0.0432, -0.1355, 0.0631)
+      Delta-V magnitude (AU/TU) : 0.1556
+      Delta-V magnitude absolute : 4.6331
+
+TOF corresponding to a_m: 2.8247 time units, 164.2153 days
+-----------------------------------------------------------------
+Quick h check for pro-grade; z of h should be positive. (-0.0416, 0.0488, 1.0841)
+-----------------------------------------------------------------

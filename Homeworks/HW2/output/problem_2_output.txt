@@ -1,0 +1,21 @@
+HW2 Problem 2 - r and v vectors from orbital elements.
+------------------------------------------------------
+Orbital elements for Case 1:
+a :                          6677.78 km
+r_periapse :                 6611
+e :                          0.01
+i (deg):                     90
+RAoAN (deg):                 0
+Longit. of AN (deg):         0
+Mean Anom (deg) :            355
+Eccentric Anom (rad, deg):   355.000, 20340.002
+Theta (rad):                 0.000
+h vector :                   51589.689
+True Anom:                   0.000 radians
+Radius Mag:                  6611.000 km
+Radius vector:               (6611.0, 0.0, 0.0) km
+Radius mag (2):              6611.000 km
+Velocity vector:             (-0.0, 0.0, 7.804) km/s
+Velocity mag (2):            7.804 km/s
+Return of check function:    True
+---------------------------------------------

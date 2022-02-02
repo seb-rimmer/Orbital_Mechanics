@@ -1,0 +1,36 @@
+HW1 Problem 3 - r_t1/v_t1 from r_t0/v_t0 .
+------------------------------------------------------
+Case: Lec 6 Test Case
+Radius vector   [-4743, 4743, 0] km
+Velocity vector [-5.879, -4.223, 0.0] km/s
+Delta t:        600
+------------------------------------------------------
+Eccentricity (mag, vector):          0.199, [0.199, -0.0, -0.0]
+Semi-maj axis (mag):                 5998.168 km
+Initial E0 value: (rad):             2.205 rad
+E value for t1: (rad):               2.907 rad
+F constant for r_t1:                 0.789 
+G constant for r_t1:                 558.742 
+r_t1 vector:                         [-7027.094, 1382.681, 0.0] km 
+F_dot constant for r_t1:             -0.001 
+G_dot constant for r_t1:             0.802 
+v_t1 vector:                         [-1.603, -6.503, 0.0] km/s 
+h_mag check result:                  True 
+------------------------------------------------------
+Case: HW1 Problem 3 Case
+Radius vector   [-8903.833, 1208.356, 213.066] km
+Velocity vector [-0.971, -6.065, -1.069] km/s
+Delta t:        10800
+------------------------------------------------------
+Eccentricity (mag, vector):          0.125, [0.125, -0.0, -0.0]
+Semi-maj axis (mag):                 7999.772 km
+Initial E0 value: (rad):             2.987 rad
+E value for t1: (rad):               12.487 rad
+F constant for r_t1:                 -0.778 
+G constant for r_t1:                 -52.601 
+r_t1 vector:                         [6974.321, -620.542, -109.441] km 
+F_dot constant for r_t1:             0.000 
+G_dot constant for r_t1:             -1.281 
+v_t1 vector:                         [0.64, 7.854, 1.384] km/s 
+h_mag check result:                  True 
+------------------------------------------------------
