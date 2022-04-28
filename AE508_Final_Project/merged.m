@@ -69,10 +69,10 @@ T_N   = 0.235;             % Engine Thrust, N, kg * m/s^2
 
 c_ms  = g_earth * isp_s;   % c, m/s
 power = 0.5 * T_N * c_ms;  % Resulting propulsion system power requirement
+b = gamma*mass/c_ms;
 end
 
 gamma = T_N/mass;
-b = gamma*mass/c_ms;
 
 end
 % Spacecraft #2 Parameters
@@ -244,7 +244,7 @@ while (tf < tf_upper_limit)
         fuel_mass = mass - X_minU(end,5);
         fuel_burnt(end+1, 1) = t_minU(end);
         fuel_burnt(end, 2) = fuel_mass;
-    
+        cum_fuel = nan;
     else
         gamma = vecnorm([X_minU(:,6) X_minU(:,7)], 2, 2);   % Units of DU/TU^2
         gamma_ms = gamma * TU^2 / (DU*1000);                % Units of m/s^2
