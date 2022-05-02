@@ -30,7 +30,7 @@ g_earth  = 9.81;                    % Earth g constant, m/s^2
 %   3. Medium spacecraft, VSI low-thrust electric propulsion
 %   4. CubeSat, VSI low-thrust electric propulsion
 %
-scenario = 1;
+scenario = 2;
 
 if mod(scenario, 2)
     sc_1_mediumsat = true;
@@ -305,7 +305,7 @@ saveas(figure(6),output_file_name);
 plot_trajectory(X_minU, scenario);
 plot_states(t_minU,X_minU, ht_prop);
 % plot_costates(t_minU,X_minU);
-plot_controls(t_minU,X_minU, u_1, u_2, ht_prop, thrust, cum_fuel)
+plot_controls(t_minU,X_minU, u_1, u_2, ht_prop, thrust, cum_fuel, scenario)
 
 %% Functions
 function d = delta(rho, lam_u, lam_v)
@@ -460,10 +460,9 @@ function plot_costates(t_minU,X_minU)
     title('Tangential Velocity Costate \lambda_v')
 end
 
-function plot_controls(t_minU,X_minU, u_1, u_2, ht_prop, thrust, cum_fuel)
+function plot_controls(t_minU,X_minU, u_1, u_2, ht_prop, thrust, cum_fuel, scenario)
 
 %% Control - Can plot from the co-states
-figure(5)
 title('Control Vectors for final solution')
 
 if ht_prop
@@ -482,34 +481,45 @@ if ht_prop
     title('Control - Angular Thrust Component')
 else
 
-    title('Control Vectors for final solution')
-    subplot 411
-    plot(t_minU, -X_minU(:,7),'b-','Linewidth',2)
-    ylabel('$u_r (AU/TU^2)$')
-    xlabel('Time (TU)')
-    grid minor
-    title('Control - Radial Thrust Component')
-
-    subplot 412
-    plot(t_minU, -X_minU(:,6),'b-','Linewidth',2)
-    ylabel('$u_\theta (AU/TU^2)$')
-    xlabel('Time (TU)')
-    grid minor
-    title('Control - Angular Thrust Component')
-
-    subplot 413
+%     title('Control Vectors for final solution')
+%     subplot 411
+%     plot(t_minU, -X_minU(:,7),'b-','Linewidth',2)
+%     ylabel('$u_r (AU/TU^2)$')
+%     xlabel('Time (TU)')
+%     grid minor
+%     title('Control - Radial Thrust Component')
+% 
+%     subplot 412
+%     plot(t_minU, -X_minU(:,6),'b-','Linewidth',2)
+%     ylabel('$u_\theta (AU/TU^2)$')
+%     xlabel('Time (TU)')
+%     grid minor
+%     title('Control - Angular Thrust Component')
+% 
+    
+    figure(5)
     plot(t_minU, thrust,'b-','Linewidth',2)
-    ylabel('Thrust - N')
-    xlabel('Time (TU)')
+    ylabel('Thrust - N', 'FontSize', 15)
+    xlabel('Time (TU)', 'FontSize', 15)
     grid minor
-    title('Required Thrust Profile')
-
-    subplot 414
+    fig_title = 'Required Thrust Profile Scenario %d'; 
+    title(sprintf(fig_title, scenario), 'FontSize', 18)
+    file_name = 'scenario_%d_results/scenario_%d_thrust_profile.png';
+    output_file_name = sprintf(file_name, scenario, scenario);
+    saveas(figure(5),output_file_name);
+    
+    figure(6)
     plot(t_minU, cum_fuel,'b-','Linewidth',2)
-    ylabel('mass (kg)')
-    xlabel('Time (TU)')
+    ylabel('mass (kg)', 'FontSize', 15)
+    xlabel('Time (TU)', 'FontSize', 15)
     grid minor
-    title('Cummulative Expended Fuel')
+    fig_title = 'Cummulative Expended Fuel Scenario %d'; 
+    title(sprintf(fig_title, scenario), 'FontSize', 18)
+    file_name = 'scenario_%d_results/scenario_%d_cum_fuel_expend.png';
+    output_file_name = sprintf(file_name, scenario, scenario);
+    saveas(figure(6),output_file_name);
+
+    
 end
 
 end
