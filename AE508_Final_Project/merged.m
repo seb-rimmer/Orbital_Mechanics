@@ -149,8 +149,8 @@ v_tf     = sqrt(1/r_tf);
 xf       = [r_tf u_tf v_tf];
 
 % Propagator limits
-tf_guess_enlarge_factor = [3 10 2.3 2];
-tf_upper_limit          = [4.5 4 210 70]; 
+tf_guess_enlarge_factor = [3 12 2 2];
+tf_upper_limit          = [4.5 4 200 90]; 
 tf_growth_factor        = [1.05 1.2 1.02 1.02];
 
 tf_guess_enlarge_factor = tf_guess_enlarge_factor(scenario);
@@ -180,7 +180,7 @@ while (tf < tf_upper_limit)
     err = 1;
     rho = 1;
     
-    while (rho > 1e-4)
+%     while (rho > 1e-4)
 
         while (err > 1e-2)
 
@@ -199,7 +199,7 @@ while (tf < tf_upper_limit)
 
         rho = rho * 0.3;    % Sweeping rho down for next iteration
         err = 1;            % Resetting error
-    end
+%     end
        
     if ht_prop == true
         
@@ -236,7 +236,7 @@ while (tf < tf_upper_limit)
         plot(t_minU, thrust, 'DisplayName', rho_str);
         xlabel('Time (TU)','FontSize', 15)
         xlim([0 t_minU(end)])
-        ylim([0 25])
+        ylim([0 T_N*1.2])
         ylabel('Thrust (N)','FontSize', 15)
         fig_title = 'Thurst Profile for CSI Scenario %d'; 
         title(sprintf(fig_title, scenario),'FontSize', 18)
