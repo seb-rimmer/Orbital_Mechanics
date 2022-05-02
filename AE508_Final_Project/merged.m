@@ -21,7 +21,6 @@ VU = DU/TU;
 
 g_earth  = 9.81;                    % Earth g constant, m/s^2
 
-
 %% Choosing spacecraft and propulsion scheme to use. 
 % We solve for one of 4 possible scenarios:
 % 
@@ -31,7 +30,7 @@ g_earth  = 9.81;                    % Earth g constant, m/s^2
 %   3. Medium spacecraft, VSI low-thrust electric propulsion
 %   4. CubeSat, VSI low-thrust electric propulsion
 %
-scenario = 4;
+scenario = 1;
 
 if mod(scenario, 2)
     sc_1_mediumsat = true;
@@ -150,9 +149,9 @@ v_tf     = sqrt(1/r_tf);
 xf       = [r_tf u_tf v_tf];
 
 % Propagator limits
-tf_guess_enlarge_factor = [1.2 10 2.3 2];
-tf_upper_limit          = [5 4 210 70]; 
-tf_growth_factor        = [1.2 1.2 1.02 1.02];
+tf_guess_enlarge_factor = [3 10 2.3 2];
+tf_upper_limit          = [4.5 4 210 70]; 
+tf_growth_factor        = [1.05 1.2 1.02 1.02];
 
 tf_guess_enlarge_factor = tf_guess_enlarge_factor(scenario);
 tf_upper_limit          = tf_upper_limit(scenario);
@@ -221,27 +220,27 @@ while (tf < tf_upper_limit)
         % Plotting new switch function profile with each iteration
         rho_str = sprintf('Time of flight = %.3f TU',tf);
 
-        figure(1)
-
-        subplot 211
+        figure(1);
         plot(t_minU, s_t, 'DisplayName', rho_str);    
-        xlabel('Time')
+        xlabel('Time (TU)','FontSize', 15)
         xlim([0 t_minU(end)])
-        ylabel('Switch Function Magnitude (Non-Di)')
-        title('Switch Function')
-        legend()
+        ylabel('Switch Function Magnitude (Non-Di)','FontSize', 15)
+        title(sprintf(fig_title, scenario),'FontSize', 18)       
+%         legend()
         grid on
         grid minor
         hold all
 
         % Plotting new thrust profile with each iteration
-        subplot 212
+        figure(2);
         plot(t_minU, thrust, 'DisplayName', rho_str);
-        xlabel('Time')
+        xlabel('Time (TU)','FontSize', 15)
         xlim([0 t_minU(end)])
-        ylabel('Thrust (N)')
-        title('Thurst Profile')
-        legend()
+        ylim([0 25])
+        ylabel('Thrust (N)','FontSize', 15)
+        fig_title = 'Thurst Profile for CSI Scenario %d'; 
+        title(sprintf(fig_title, scenario),'FontSize', 18)
+%         legend()
         grid on
         grid minor
         hold all
@@ -279,12 +278,31 @@ while (tf < tf_upper_limit)
     tf = tf*tf_growth_factor;
 end
 
-fuel_burnt;
-figure(6)
-scatter(fuel_burnt(:,1)',fuel_burnt(:,2)', 'x')
+if ht_prop == true
+    file_name = 'scenario_%d_results/scenario_%d_switch_function.png';
+    output_file_name_sf = sprintf(file_name, scenario, scenario);
+    saveas(figure(1), output_file_name_sf)
+    
+    file_name = 'scenario_%d_results/scenario_%d_thrust_profile.png';  
+    output_file_name_tp = sprintf(file_name, scenario, scenario);
+    saveas(figure(2), output_file_name_tp)
+end
+  
+figure(6);
+scatter(fuel_burnt(:,1)',fuel_burnt(:,2),20,'k','x');
+grid minor
+ylabel('Cost (Fuel mass, kg)', 'FontSize', 15)
+xlabel('Time of flight (TU)', 'FontSize', 15)
+fig_title = 'Cost vs. Time of Flight for Scenario %d'; 
+title(sprintf(fig_title, scenario), 'FontSize', 18)
+file_name = 'scenario_%d_results/scenario_%d_cost_vs_tof.png';
+output_file_name = sprintf(file_name, scenario, scenario);
+saveas(figure(6),output_file_name);
+    
+
 
 %% Plots
-plot_trajectory(X_minU);
+plot_trajectory(X_minU, scenario);
 plot_states(t_minU,X_minU, ht_prop);
 % plot_costates(t_minU,X_minU);
 plot_controls(t_minU,X_minU, u_1, u_2, ht_prop, thrust, cum_fuel)
@@ -361,14 +379,21 @@ err = [X(end,1) 0 X(end,3) X(end,4)]' - [xf(1) 0 0 sqrt(1/xf(1))]';
 
 end
 
-function plot_trajectory(X_minU)
-    figure(2)
+function plot_trajectory(X_minU, scenario)
+    figure(7)
     radial_distance = X_minU(:,1);
     angular_position = X_minU(:,2);
     polarplot(angular_position, radial_distance)
     pax = gca;
     pax.RLim = [X_minU(1,1)*0.98, X_minU(end,1)*1.01];
-    title('Polar Plot of Trajectory')
+    
+    fig_title = 'Polar Plot of Trajectory for Scenario %d'; 
+    title(sprintf(fig_title, scenario), 'FontSize', 18)
+    
+    file_name = 'scenario_%d_results/scenario_%d_trajectory.png';
+    output_file_name = sprintf(file_name, scenario, scenario);
+    saveas(figure(7),output_file_name);
+
 end
 
 function plot_states(t_minU,X_minU,ht_prop)
