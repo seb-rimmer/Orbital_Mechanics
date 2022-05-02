@@ -11,11 +11,16 @@
 close all; clc;
 
 % Canonical Units conversion 
-TU = 806.9;             % 1 TU, seconds
-DU = 6378;              % Mean radius of earth, km
+M_e = 6.674e-11;                    % mass of Earth, kg
+G   = 5.972e+24;                    % Gravitational parameter, N m^2 kg^-2
+mu_earth = G * M_e;                 % m^3 / s^-2 For ND Units
+
+DU  = 6378;                         % Mean radius of earth, km
+TU = sqrt((DU*1000)^3/(mu_earth));  % Time unit from canonical units equation
 VU = DU/TU;
-mu_earth = 3.98e+14;    % m^3 / s^-2 For ND Units
-g_earth  = 9.81;        % Earth g constant, m/s^2
+
+g_earth  = 9.81;                    % Earth g constant, m/s^2
+
 
 %% Choosing spacecraft and propulsion scheme to use. 
 % We solve for one of 4 possible scenarios:
