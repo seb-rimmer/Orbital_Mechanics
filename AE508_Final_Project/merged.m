@@ -30,7 +30,7 @@ g_earth  = 9.81;                    % Earth g constant, m/s^2
 %   3. Medium spacecraft, VSI low-thrust electric propulsion
 %   4. CubeSat, VSI low-thrust electric propulsion
 %
-scenario = 4;
+scenario = 1;
 
 if mod(scenario, 2)
     sc_1_mediumsat = true;
@@ -306,7 +306,33 @@ file_name = 'scenario_%d_results/scenario_%d_cost_vs_tof.png';
 output_file_name = sprintf(file_name, scenario, scenario);
 saveas(figure(6),output_file_name);
     
+%% Writing out Table of key data for this case
 
+parameters_table_rownames = ["scenario" "tof_guess (s)" ...
+                             "tof_guess (hours)" "tof_guess (TU)" ...
+                             "mass" "isp" "thrust"]';            
+params = [scenario; t_f_guess; t_f_guess/3600; t_f_guess/TU; mass; isp_s; T_N;];
+
+parameters_table = table(parameters_table_rownames, params);
+parameters_table_name = 'scenario_%d_results/parameters_table.csv';
+writetable(parameters_table, ...
+           sprintf(parameters_table_name, scenario), ...
+           'Delimiter',',')
+       
+[numRows,numCols] = size(fuel_burnt(:,1));
+iteration_num = linspace(1, numRows, numRows)';
+time_of_flight = fuel_burnt(:,1);
+mass_cost = fuel_burnt(:,2);
+
+costs_table = table(iteration_num, time_of_flight, mass_cost);
+costs_table.Properties.VariableNames = ["Iteration", ...
+                                        "Time of Flight TU", ...
+                                        "Cost mass (kg)"];
+
+costs_table_name = 'scenario_%d_results/costs_data.csv';
+writetable(costs_table, ...
+           sprintf(costs_table_name, scenario), ...
+           'Delimiter',',') 
 
 %% Plots
 plot_trajectory(X_minU, scenario);
