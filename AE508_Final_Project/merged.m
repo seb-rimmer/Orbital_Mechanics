@@ -8,7 +8,7 @@
 % Earth-based canonical units used
 % -------------------------------------------------------------------------
 %% System Variables
-close all; clc;
+close all; clear; clc;
 
 % Canonical Units conversion 
 M_e = 6.674e-11;                    % mass of Earth, kg
@@ -30,7 +30,7 @@ g_earth  = 9.81;                    % Earth g constant, m/s^2
 %   3. Medium spacecraft, VSI low-thrust electric propulsion
 %   4. CubeSat, VSI low-thrust electric propulsion
 %
-scenario = 2;
+scenario = 4;
 
 if mod(scenario, 2)
     sc_1_mediumsat = true;
@@ -46,7 +46,7 @@ if scenario <= 2
 else
     ht_prop = false;
     lt_prop = true;
-    lam_guess_mag = 1e-2;
+    lam_guess_mag = 1e-4;
 end
 
 % Spacecraft #1 Parameters  
@@ -65,18 +65,21 @@ mass  = 500;               % SC mass, kg
 if ht_prop == true
 isp_s = 230;               % Engine ISP, seconds
 T_N   = 20;                % Engine Thrust, N, kg * m/s^2 
+
+gamma = T_N/mass;
 end
 
 if lt_prop == true
 isp_s = 4220;              % Engine ISP, seconds
 T_N   = 0.235;             % Engine Thrust, N, kg * m/s^2 
 
+gamma = T_N/mass;
+
 c_ms  = g_earth * isp_s;   % c, m/s
 power = 0.5 * T_N * c_ms;  % Resulting propulsion system power requirement
 b = gamma*mass/c_ms;
 end
 
-gamma = T_N/mass;
 
 end
 % Spacecraft #2 Parameters
@@ -84,8 +87,8 @@ if sc_2_cubesat == true
 % -----------------------------------------------------------------------------
 % Roughly based off size and thrust capabilities of a 12 U CubeSat
 %
-% Uses the Dawn Aerospace B20 Thruster for CSI propulsion. 
-% https://catalog.orbitaltransports.com/b20-thruster-green-propulsion/
+% Uses the NanoAvionics EPSS C1.5 Propulsion System
+% https://satsearch.co/products/nanoavionics-propulsion-system-epss-c1-5
 %
 % Uses L-3 ETI XIPS 13cm Xenon thruster for VSI Propulsion
 % https://digitalcommons.usu.edu/cgi/viewcontent.cgi?article=1459&context=smallsat
@@ -93,17 +96,20 @@ if sc_2_cubesat == true
 mass  = 16;                % SC mass, kg
 
 if ht_prop == true
-isp_s = 300;               % Engine ISP, seconds
-T_N   = 8;                 % Engine Thrust, N, kg * m/s^2 
+isp_s = 220;               % Engine ISP, seconds
+T_N   = 0.625;             % Engine Thrust, N, kg * m/s^2  - based on BOL/EOL average
+c_ms  = g_earth * isp_s;   % c, m/s
+
 end
 
 if lt_prop == true
 isp_s = 2350;               % Engine ISP, seconds
 T_N   = 0.018;              % Engine Thrust, N, kg * m/s^2 
+c_ms  = g_earth * isp_s;    % c, m/s
+
 power = 0.5 * T_N * c_ms;  % Resulting propulsion system power requirement
 end
 
-c_ms  = g_earth * isp_s;    % c, m/s
 gamma = T_N/mass;
 b = gamma*mass/c_ms;
 end
@@ -113,7 +119,7 @@ alt_1 = 400;            % Altitude 1, km
 alt_2 = 450;            % Altitude 2, km
 
 % Guest-imate for time of flight using Eq 6.9
-t_f_guess = (mu_earth^0.5)/gamma * (((DU+alt_1)*1000)^-0.5 - ((DU+alt_2)*1000)^-0.5 );
+t_f_guess = (mu_earth^0.5)/gamma * ( 1/sqrt((DU+alt_1)*1000) - 1/sqrt((DU+alt_2)*1000) );
 t_f_guess_hours = t_f_guess/3600;
 
 % Guest-imate for delta-v using Eq 6.12
@@ -149,9 +155,9 @@ v_tf     = sqrt(1/r_tf);
 xf       = [r_tf u_tf v_tf];
 
 % Propagator limits
-tf_guess_enlarge_factor = [3 12 2 2];
-tf_upper_limit          = [4.5 4 200 90]; 
-tf_growth_factor        = [1.05 1.2 1.02 1.02];
+tf_guess_enlarge_factor = [3 3 1.2 2];
+tf_upper_limit          = [4.5 4 200 300]; 
+tf_growth_factor        = [1.05 1.05 1.05 1.02];
 
 tf_guess_enlarge_factor = tf_guess_enlarge_factor(scenario);
 tf_upper_limit          = tf_upper_limit(scenario);
@@ -180,7 +186,7 @@ while (tf < tf_upper_limit)
     err = 1;
     rho = 1;
     
-%     while (rho > 1e-4)
+    while (rho > 1e-4)
 
         while (err > 1e-2)
 
@@ -199,7 +205,7 @@ while (tf < tf_upper_limit)
 
         rho = rho * 0.3;    % Sweeping rho down for next iteration
         err = 1;            % Resetting error
-%     end
+    end
        
     if ht_prop == true
         
@@ -225,6 +231,7 @@ while (tf < tf_upper_limit)
         xlabel('Time (TU)','FontSize', 15)
         xlim([0 t_minU(end)])
         ylabel('Switch Function Magnitude (Non-Di)','FontSize', 15)
+        fig_title = 'Switch Function Profile for CSI Scenario %d'; 
         title(sprintf(fig_title, scenario),'FontSize', 18)       
 %         legend()
         grid on
@@ -288,7 +295,7 @@ if ht_prop == true
     saveas(figure(2), output_file_name_tp)
 end
   
-figure(6);
+figure(8);
 scatter(fuel_burnt(:,1)',fuel_burnt(:,2),20,'k','x');
 grid minor
 ylabel('Cost (Fuel mass, kg)', 'FontSize', 15)
