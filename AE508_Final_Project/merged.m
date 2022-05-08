@@ -30,7 +30,7 @@ g_earth  = 9.81;                    % Earth g constant, m/s^2
 %   3. Medium spacecraft, VSI low-thrust electric propulsion
 %   4. CubeSat, VSI low-thrust electric propulsion
 %
-scenario = 1;
+scenario = 4;
 
 if mod(scenario, 2)
     sc_1_mediumsat = true;
@@ -105,10 +105,13 @@ end
 if lt_prop == true
 isp_s = 2350;               % Engine ISP, seconds
 T_N   = 0.018;              % Engine Thrust, N, kg * m/s^2 
-c_ms  = g_earth * isp_s;    % c, m/s
 
+gamma = T_N/mass;
+c_ms  = g_earth * isp_s;   % c, m/s
 power = 0.5 * T_N * c_ms;  % Resulting propulsion system power requirement
+b = gamma*mass/c_ms;
 end
+
 
 gamma = T_N/mass;
 b = gamma*mass/c_ms;
@@ -155,9 +158,9 @@ v_tf     = sqrt(1/r_tf);
 xf       = [r_tf u_tf v_tf];
 
 % Propagator limits
-tf_guess_enlarge_factor = [3 3 1.2 2];
-tf_upper_limit          = [4.5 4 200 300]; 
-tf_growth_factor        = [1.05 1.05 1.05 1.02];
+tf_guess_enlarge_factor = [3 3 1.2 1.2];
+tf_upper_limit          = [4.5 4.5 200 200]; 
+tf_growth_factor        = [1.05 1.05 1.05 1.05];
 
 tf_guess_enlarge_factor = tf_guess_enlarge_factor(scenario);
 tf_upper_limit          = tf_upper_limit(scenario);
@@ -166,6 +169,7 @@ tf_growth_factor        = tf_growth_factor(scenario);
 % Time of flight(s)
 t0 = 0;
 tf = t_f_guess*tf_guess_enlarge_factor/TU;
+
 
 %% Iterating on initial costate guesses
 % Setting ODE and fsolve options
@@ -183,10 +187,11 @@ while (tf < tf_upper_limit)
     
     % Resetting error, and rho with each iteration
     lam0 = lam_guess_mag * rand(3, 1)';
+%     lam0 = [-0.001, 0.015, -1e-05];
     err = 1;
     rho = 1;
     
-    while (rho > 1e-4)
+%     while (rho > 1e-4)
 
         while (err > 1e-2)
 
@@ -205,7 +210,7 @@ while (tf < tf_upper_limit)
 
         rho = rho * 0.3;    % Sweeping rho down for next iteration
         err = 1;            % Resetting error
-    end
+%     end
        
     if ht_prop == true
         
@@ -258,7 +263,7 @@ while (tf < tf_upper_limit)
         cum_fuel = nan;
     else
         gamma = vecnorm([X_minU(:,6) X_minU(:,7)], 2, 2);   % Units of DU/TU^2
-        gamma_ms = gamma * TU^2 / (DU*1000);                % Units of m/s^2
+        gamma_ms = (gamma * TU^2 / DU)/1000;                % Units of m/s^2
         thrust = gamma_ms * mass;
         inst_fuel_burnt = [];
 
@@ -283,6 +288,9 @@ while (tf < tf_upper_limit)
     end
     
     tf = tf*tf_growth_factor;
+
+    
+    
 end
 
 if ht_prop == true
@@ -304,14 +312,14 @@ fig_title = 'Cost vs. Time of Flight for Scenario %d';
 title(sprintf(fig_title, scenario), 'FontSize', 18)
 file_name = 'scenario_%d_results/scenario_%d_cost_vs_tof.png';
 output_file_name = sprintf(file_name, scenario, scenario);
-saveas(figure(6),output_file_name);
+saveas(figure(8),output_file_name);
     
 %% Writing out Table of key data for this case
 
 parameters_table_rownames = ["scenario" "tof_guess (s)" ...
                              "tof_guess (hours)" "tof_guess (TU)" ...
-                             "mass" "isp" "thrust"]';            
-params = [scenario; t_f_guess; t_f_guess/3600; t_f_guess/TU; mass; isp_s; T_N;];
+                             "mass" "isp" "thrust" "Revolutions in trans"]';            
+params = [scenario; t_f_guess; t_f_guess/3600; t_f_guess/TU; mass; isp_s; T_N; X_minU(end,2)/2*pi;];
 
 parameters_table = table(parameters_table_rownames, params);
 parameters_table_name = 'scenario_%d_results/parameters_table.csv';
