@@ -1,0 +1,28 @@
+Warning: Trust-region-dogleg algorithm of FSOLVE cannot handle non-square systems; using
+Levenberg-Marquardt algorithm instead. 
+> In fsolve (line 316)
+  In AE508_HW4_Rimmer (line 89) 
+
+                                        First-Order                    Norm of 
+ Iteration  Func-count    Residual       optimality      Lambda           step
+     0           4         0.98256           0.272         0.01
+     1           8        0.772247           0.254        0.001        2.58348
+     2          12        0.446616          0.0765       0.0001        6.25789
+     3          19        0.218516           0.203          0.1       0.733032
+     4          23        0.115752           0.315         0.01       0.442252
+     5          27       0.0989746           0.227        0.001        1.04717
+     6          31       0.0273627          0.0458       0.0001        3.16108
+     7          35      0.00396025          0.0571        1e-05        3.62305
+     8          39      0.00017076          0.0173        1e-06       0.539615
+     9          43     1.30218e-06         0.00172        1e-07       0.125541
+    10          47     3.25176e-12         2.6e-06        1e-08     0.00435396
+    11          51     9.50232e-24        4.17e-12        1e-09    1.27517e-06
+    12          55     1.66996e-28        1.71e-14        1e-10    7.75362e-12
+
+Equation solved.
+
+fsolve completed because the vector of function values is near zero
+as measured by the value of the function tolerance, and
+the problem appears regular as measured by the gradient.
+
+<stopping criteria details>
