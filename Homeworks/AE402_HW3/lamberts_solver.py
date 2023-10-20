@@ -2,30 +2,31 @@ from math import sin, cos, asin, acos, pi, sqrt
 from scipy.optimize import fsolve 
 
 
-def lamberts_time_equation(a):
+def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 
-    s  = 1.8381
-    c  = 1.6007
-    tf = 9.06
+    a, alpha, beta = [x for x in vars]
+    
+    a2 = 2*asin(sqrt(s/(2*a)))
+    b2 = 2*asin(sqrt((s-c)/(2*a)))
 
-    # % Updated value for alpha because our t_f is greater than t_m
-
-    alpha = 2*pi - 2*asin(sqrt(s/(2*a)))
-    beta  = - 2*asin(sqrt((s-c)/(2*a)))
-
-    return tf - (a**(3/2))*(alpha-beta-sin(alpha)+sin(beta));
+    return [alpha - a2,
+            beta - b2,
+            tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
 
 def main():
 
-    solution = fsolve(lamberts_time_equation, x0=1.1)
-    print(solution)
-    print("check : {}")
+    tf = (115/365) * 2*pi
+    s, c = 2.0578793172534886, 1.5917586345069774
 
-    # if solution.success:
-    #     result = solution.x
-    #     print(f'Solution: x = {result[0]}')
-    # else:
-    #     print('No solution found.')
+    am     = 1.0289396586267443 * 1.2
+    alpha0 = 2 * asin( sqrt(  (s)   / (2*am) ) )  # 3.141592653589793
+    beta0  = 2 * asin( sqrt(  (s-c) / (2*am) ) )  # 0.9920327545964835
+
+    solution = fsolve(lamberts_time_equation_solver_lower_branch,
+                      [am, alpha0, beta0], 
+                      args=(tf, s, c))
+    
+    print(solution)
 
 if __name__ == '__main__':
     main()
