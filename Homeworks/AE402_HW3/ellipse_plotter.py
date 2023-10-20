@@ -1,62 +1,80 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from math import cos, sin, pi, sqrt
+from math import cos, sin, pi, sqrt, ceil, atan
+import numpy as np
 
-#  Create a figure and axis
-fig, ax = plt.subplots()
+def plot_transfer(r2, sma, theta):
 
-# Define the ellipse parameters (center, width, height, and angle)
-theta_d = 147
-theta_r = theta_d * pi/180
-re = 1
-rj = 5.2
-sma = 5.32
+    #  Create a figure and axis
+    fig, ax = plt.subplots()
 
-a, b, c = 1, rj*cos(theta_r)/sma, (rj - sma)/sma
-dis = b**2 - 4*a*c
-e1, e2 = (-b + sqrt(dis)) / (2*a), (-b - sqrt(dis)) / (2*a)
-e = max(e1, e2)
+    # Calcualte the ellipse parameters (center, width, height, and angle)
+    r1 = 1
+    r2 = np.linalg.norm(r2)
 
-center = (0, 0)
-earth_pos = (1, 0)
-jupiter_pos = (cos(theta_r)*rj, sin(theta_r)*rj)
-ellipse_centre = (-sma*e+1, 0)
+    e = 1 - r1/sma
 
-# Plot Earth orbit
-earth_orbit = patches.Circle(center, re, fill=False, color='k', linestyle='--')
-earth = patches.Circle(earth_pos, 0.2, fill=True, color='g')
+    x_j = r2 * cos(theta) + sma*e
+    y_j = r2 * sin(theta)
 
-# Plot Jupiter orbit
-jupiter_orbit = patches.Circle(center, rj, fill=False, color='k', linestyle='--')
-jupiter = patches.Circle(jupiter_pos, 0.5, fill=True, color='orange')
+    b = sqrt((y_j)**2 * 1/(1 - (x_j**2 / sma**2)))
+    
+    print(f'b = {b}')
+    print(f'e = {e}')
 
-# Create an Ellipse patch
-ellipse = patches.Ellipse(ellipse_centre, 2*sma, sma * sqrt(1 - e**2), fill=False, color='b')
+    # Create an array of angles for the arc
+    theta_arr  = np.linspace(0, theta, 2)
+    radius_arr = np.array(sma*(1 - e**2) / (1 + e*np.cos(theta_arr)))
+    
+    x = radius_arr * np.cos(theta_arr)
+    y = radius_arr * np.sin(theta_arr)
 
+    center = (0, 0)
+    earth_pos = (1, 0)
+    target_pos = (cos(theta)*r2, sin(theta)*r2)
+    ellipse_centre = (-sma*e, 0)
 
-# Plot vectors
-ax.plot([0, cos(theta_r)*rj], [0, sin(theta_r)*rj], label='My Line', color='red', linestyle='-', marker='')
-ax.plot([0, 1], [0, 0], label='My Line', color='red', linestyle='-', marker='')
+    # Plot Earth orbit
+    earth_orbit = patches.Circle(center, r1, fill=False, color='k', linestyle='--')
+    earth = patches.Circle(earth_pos, 0.1, fill=True, color='g')
 
-# Add the ellipse to the axis
-ax.add_patch(ellipse)
-ax.add_patch(earth_orbit)
-ax.add_patch(earth)
-ax.add_patch(jupiter_orbit)
-ax.add_patch(jupiter)
+    # Plot target orbit
+    target_orbit = patches.Circle(center, r2, fill=False, color='k', linestyle='--')
+    target = patches.Circle(target_pos, 0.1, fill=True, color='orange')
 
-# Set the aspect ratio of the plot to be equal
-ax.set_aspect('equal')
+    ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
+    ax.plot(x, y, color='blue')
 
-# Set the axis limits to show the entire ellipse
-ax.set_xlim(-6, 6)
-ax.set_ylim(-6, 6)
+    # Plot vectors
+    ax.plot([0, cos(theta)*r2], [0, sin(theta)*r2], label='My Line', color='red', linestyle='-', marker='')
+    ax.plot([0, 1], [0, 0], label='My Line', color='red', linestyle='-', marker='')
 
-# Optional: Add labels and title
-plt.xlabel('X-axis')
-plt.ylabel('Y-axis')
-plt.title('Plotting an Ellipse')
+    # Add the ellipse to the axis
+    ax.add_patch(ellipse)
+    ax.add_patch(earth_orbit)
+    # ax.add_patch(earth)
+    ax.add_patch(target_orbit)
+    # ax.add_patch(target)
 
-# Show the plot
-plt.grid()
-plt.show()
+    # Set the aspect ratio of the plot to be equal
+    ax.set_aspect('equal')
+
+    # Set the axis limits to show the entire ellipse
+    lim = (max(r1, r2)*1.2)
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
+
+    # Optional: Add labels and title
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('Plotting an Ellipse')
+
+    # Show the plot
+    plt.grid()
+    plt.show()
+
+def main():
+    plot_transfer(5.2, 5.32, 147)
+
+if __name__ == '__main__':
+    main()

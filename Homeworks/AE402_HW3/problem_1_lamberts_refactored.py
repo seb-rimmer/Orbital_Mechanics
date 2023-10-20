@@ -19,18 +19,34 @@ import matplotlib
 from math import sqrt, cos, sin, tan, acos, asin, pi
 from scipy.optimize import fsolve 
 
+# my imports
+from ellipse_plotter import plot_transfer
+
 def angle_between_vectors(r1, r2):
     
     return 0
 
-def lamberts_time_equation_solver(vars, tf, s, c):
+def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
+    
+    a2 = 2*asin(sqrt(s/(2*a)))
+    b2 = 2*asin(sqrt((s-c)/(2*a)))
 
-    # Updated value for alpha because our t_f is greater than t_m
-    return [alpha - 2*asin(sqrt(s/(2*a))),
-           beta - 2*asin(sqrt((s-c)/(2*a))),
-           tf - (a**(3/2))*(alpha-beta-sin(alpha)+sin(beta))]
+    return [alpha - a2,
+            beta - b2,
+            tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
+
+def lamberts_time_equation_solver_upper_branch(vars, tf, s, c):
+
+    a, alpha, beta = [x for x in vars]
+    
+    a2 = 2*pi - 2*asin(sqrt(s/(2*a)))
+    b2 = 2*asin(sqrt((s-c)/(2*a)))
+
+    return [alpha - a2,
+            beta - b2,
+            tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
 
 def lamberts_time_equation_tf_TU(a, alpha, beta):
 
@@ -40,20 +56,44 @@ def main():
 
     # System constants
     TU = (3.137 * 10**7) / (2*pi)
-    au = 149_597_871  # km for 1 AU for canonical units
-    DU = 1 * au
+    AU = 149_597_871  # km for 1 AU for canonical units
+    DU = 1 * AU
     mu = 1
 
+    # Some examples to test
+    # example var can be j, v, or m
+
+    example ='j'
+    
+    if example == 'j':
+        # Jupiter
+        theta_d = 147
+        r0 = 1
+        rf = 5.2
+        tf_days = 524
+    
+    elif example == 'v':
+        # Venus
+        theta_d = 135
+        r0 = 1
+        rf = 0.723
+        tf_days = 337
+    
+    elif example == 'm':
+        # Mars
+        theta_d = 75
+        r0 = 1
+        rf = 1.524
+        tf_days = 115
+
     # Angle between vectors
-    theta = 147.0 * pi/180
+    theta = theta_d * pi/180
 
     # Starting vector
-    r0 = 1
     r0 = np.array([r0, 0])
     v_dep = np.array([0, 1])
 
     # Final vector
-    rf = 5.2
     rf = np.array([-rf*cos(pi - theta), rf*sin(pi-theta)])
     u_2 = cos(theta)
     v_arr = np.sqrt(1/np.linalg.norm(rf)) * np.array([-sin(theta), cos(theta)])
@@ -63,8 +103,7 @@ def main():
     u_2 = rf / np.linalg.norm(rf)
 
     # Time of flight
-    tf_days = 524
-    tf = (tf_days * 24 * 3600) / TU
+    tf = (tf_days/365.25) * 2 * pi
 
     r1 = np.linalg.norm(r0)
     r2 = np.linalg.norm(rf)
@@ -82,33 +121,38 @@ def main():
     a_m = s/2
 
     # Step 2 - Compute the principal values of alpha and beta from minimum sma
-    alpha_m = 2 * asin(sqrt(s / (2*a_m)))
-    beta_m  = 2 * asin(sqrt((s-c) / (2*a_m)))
+    alpha0 = 2 * asin( sqrt(  (s)   / (2*a_m) ) ) 
+    beta0  = 2 * asin( sqrt(  (s-c) / (2*a_m) ) )
 
     # Step 4 - Compute the time corresponding to the minimum semimajor axis transfer ellipse
-    tm = sqrt((s**3) / 8) * (pi - beta_m + sin(beta_m))
+    tm = sqrt((s**3) / 8) * (pi - beta0 + sin(beta0))
 
     # Step 5 - Determine initial values of alpha and beta
     if theta <= pi:
-        beta = beta_m
+        beta = beta0
     else:
-        beta = -beta_m
+        beta = -beta0
 
     if tf <= tm:
-        alpha = alpha_m
+        alpha = alpha0
     else:
-        alpha = 2*pi - alpha_m
+        alpha = 2*pi - alpha0
 
     # Step 6 - Numerically solve lambert's time equation for semimajor axis
     #
     # lamberts_time_equation(a, s, c, tf)
-    solutions = fsolve(lamberts_time_equation_solver, [a_m, alpha, beta], args=(tf, s, c))
+    # initial guess of a needs to be a bit further away from a_m so we don't hit a 
+    # singularity with asin() calcualtions
+    x0 = [a_m*1.2, alpha0, beta0]
+
+    if tf > tm:
+        solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
+    else:
+        solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
+    
     a, alpha, beta = [x for x in solutions]
     
-    # if solution.success:
     print(f'Solution: x = {solutions}')
-    # else:
-    #     print('No solution found.')
 
     # Step 7 - Compute terminal velocity vectors v1 and v2
     
@@ -122,10 +166,13 @@ def main():
     # Step 8 - Compute total dV for transfer
     dv1 = np.linalg.norm(v1 - v_dep)
     dv2 = np.linalg.norm(v_arr - v2)
-    print(f"dV = {dv1 + dv2}")
+    
+    print(f"Departure dV = {dv1} DU/TU  /  dV = {dv1 * DU/TU} km/s")
+    print(f"Arrival dV   = {dv2} DU/TU  /  dV = {dv2 * DU/TU} km/s")
+    print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
 
     # Step 9 - Plot trajectories, start points and end points
-    
+    plot_transfer(rf, a, theta)
 
 if __name__ == '__main__':
     main()
