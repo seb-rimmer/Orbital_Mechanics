@@ -15,6 +15,8 @@
 
 import numpy as np
 import matplotlib
+import argparse
+
 
 from math import sqrt, cos, sin, tan, acos, asin, pi
 from scipy.optimize import fsolve 
@@ -54,6 +56,24 @@ def lamberts_time_equation_tf_TU(a, alpha, beta):
 
 def main():
 
+    parser = argparse.ArgumentParser(description="A simple Python script that shows lamberts problem trajectories")
+    
+    # Add command line arguments
+    parser.add_argument('--example', 
+                        type = str, 
+                        choices = ['v', 'm', 'j'],
+                        help = "Which Lambert's example you want to use, out of Mars (m), Jupiter (j) or Venus (v) transfer")
+    
+    # parser.add_argument('--output', type=str, help="Output file")
+    # parser.add_argument('--verbose', action='store_true', help="Enable verbose mode")
+    
+    args = parser.parse_args()
+    
+    # Access the argument values
+    example = args.example
+    # output_file = args.output
+    # verbose = args.verbose
+
     # System constants
     TU = (3.137 * 10**7) / (2*pi)
     AU = 149_597_871  # km for 1 AU for canonical units
@@ -62,8 +82,6 @@ def main():
 
     # Some examples to test
     # example var can be j, v, or m
-
-    example ='j'
     
     if example == 'j':
         # Jupiter
