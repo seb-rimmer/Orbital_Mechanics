@@ -24,6 +24,9 @@ def plot_transfer(r2, sma, theta):
     print(f'b = {b}')
     print(f'e = {e}')
 
+    x_traj = np.linspace(r2 * cos(theta), 1, 100)
+    y_traj = np.array([b*sqrt(1 - ( (x + sma*e) / sma)**2) for x in x_traj])
+
     center = (0, 0)
     earth_pos = (1, 0)
     target_pos = (cos(theta)*r2, sin(theta)*r2)
@@ -38,6 +41,7 @@ def plot_transfer(r2, sma, theta):
     target = patches.Circle(target_pos, 0.1, fill=True, color='orange')
 
     ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
+    ax.plot(x_traj, y_traj, color='blue')
 
     # centre and focci positioning
     ax.plot(ellipse_centre[0], ellipse_centre[1],  marker='*')
