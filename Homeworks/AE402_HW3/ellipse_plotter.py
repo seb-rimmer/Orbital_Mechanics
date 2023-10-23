@@ -12,22 +12,17 @@ def plot_transfer(r2, sma, theta):
     r1 = 1
     r2 = np.linalg.norm(r2)
 
-    e = 1 - r1/sma
+    # this must definitely be correct
+    e = (sma - 1) / sma
 
     x_j = r2 * cos(theta) + sma*e
     y_j = r2 * sin(theta)
 
     b = sqrt((y_j)**2 * 1/(1 - (x_j**2 / sma**2)))
     
+    print(f'a = {sma}')
     print(f'b = {b}')
     print(f'e = {e}')
-
-    # Create an array of angles for the arc
-    theta_arr  = np.linspace(0, theta, 2)
-    radius_arr = np.array(sma*(1 - e**2) / (1 + e*np.cos(theta_arr)))
-    
-    x = radius_arr * np.cos(theta_arr)
-    y = radius_arr * np.sin(theta_arr)
 
     center = (0, 0)
     earth_pos = (1, 0)
@@ -43,7 +38,10 @@ def plot_transfer(r2, sma, theta):
     target = patches.Circle(target_pos, 0.1, fill=True, color='orange')
 
     ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
-    ax.plot(x, y, color='blue')
+
+    # centre and focci positioning
+    ax.plot(ellipse_centre[0], ellipse_centre[1],  marker='*')
+    ax.plot(ellipse_centre[0]+sma*e, ellipse_centre[1],  marker='*', color='red')
 
     # Plot vectors
     ax.plot([0, cos(theta)*r2], [0, sin(theta)*r2], label='My Line', color='red', linestyle='-', marker='')
@@ -74,7 +72,9 @@ def plot_transfer(r2, sma, theta):
     plt.show()
 
 def main():
-    plot_transfer(5.2, 5.32, 147)
+    # plot_transfer(5.2, 5.32, 147)
+
+    return 0
 
 if __name__ == '__main__':
     main()
