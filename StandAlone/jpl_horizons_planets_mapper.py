@@ -70,7 +70,7 @@ def plot_vectors(bodies:list, canonical):
         # Plot target orbit
         target_orbit = patches.Circle(center, r_mag, fill=False, color='k', linestyle='--')
         target = patches.Circle(r_vect, 
-                                0.3, 
+                                0.2, 
                                 fill=True, 
                                 color=(random.random(), random.random(), random.random()),
                                 label=data['Name'])
@@ -108,7 +108,8 @@ def main():
     # Format the current time as a string
     now = current_time.strftime("%Y-%m-%d %H:%M:%S")
     
-    bodies = [i for i in range(1, 6)]
+    # bodies = [i for i in range(3, 5)]
+    bodies = [3, 20065803, 4]
     body_positions = []
 
     for body in bodies:
