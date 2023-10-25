@@ -11,7 +11,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
 
+from math import sqrt 
+
+import functions
+
 def create_json_obj(data:list):
+
+    mu = float(1.32712440018E+11)
 
     for object in data:
 
@@ -24,23 +30,34 @@ def create_json_obj(data:list):
 
         # create X, Y, Z
         x_index = object[1].find('X =')+3
-        new_dict_obj['X']  = object[1][x_index:x_index+22]
+        new_dict_obj['X']  = float(object[1][x_index:x_index+22])
         
         y_index = object[1].find('Y =')+3
-        new_dict_obj['Y']  = object[1][y_index:y_index+22]
+        new_dict_obj['Y']  = float(object[1][y_index:y_index+22])
         
         z_index = object[1].find('Z =')+3
-        new_dict_obj['Z']  = object[1][z_index:z_index+22]
+        new_dict_obj['Z']  = float(object[1][z_index:z_index+22])
         
         # create VX, VY, VZ
-        x_index = object[1].find('VX =')+5
-        new_dict_obj['VX']  = object[1][x_index:x_index+22]
+        x_index = object[2].find('VX')+3
+        new_dict_obj['VX']  = float(object[2][x_index:x_index+22])
         
-        y_index = object[1].find('VY =')+5
-        new_dict_obj['VY']  = object[1][y_index:y_index+22]
+        y_index = object[2].find('VY')+3
+        new_dict_obj['VY']  = float(object[2][y_index:y_index+22])
         
-        z_index = object[1].find('VZ =')+5
-        new_dict_obj['VZ']  = object[1][z_index:z_index+22]
+        z_index = object[2].find('VZ')+3
+        new_dict_obj['VZ']  = float(object[2][z_index:z_index+22])
+
+        # create orbital elements around the sun
+        r = np.array([new_dict_obj['X'], new_dict_obj['Y'], new_dict_obj['Z']])
+        v = np.array([new_dict_obj['VX'], new_dict_obj['VY'], new_dict_obj['VZ']])
+
+        new_dict_obj['a'] = functions.a_from_vectors(r, v, mu)
+        new_dict_obj['e'] = np.linalg.norm(functions.eccentricity_from_vectors(r, v, mu))
+        new_dict_obj['i'] = functions.inclination(r, v)
+        new_dict_obj['cap_ohm'] = functions.ra_o_an(r, v)
+        new_dict_obj['low_ohm'] = functions.arg_of_periapse(r, v, mu)
+        new_dict_obj['f'] = functions.true_anom_f(r, v, mu)
 
         print(new_dict_obj)
 
@@ -61,6 +78,11 @@ def plot_vectors(bodies:list, canonical):
 
     for data in bodies:
 
+        # Plot things as an ellipse, so need to calculate semi-minor axis:
+        e = data['e']
+        a = data['a'] / divider
+        b = sqrt( a**2 - (e*a)**2 )
+
         x = float(data['X']) / divider
         y = float(data['Y']) / divider
 
@@ -69,20 +91,26 @@ def plot_vectors(bodies:list, canonical):
 
         # Plot target orbit
         target_orbit = patches.Circle(center, r_mag, fill=False, color='k', linestyle='--')
+        
+        ellipse_centre = (-a*e, 0)
+        ellipse = patches.Ellipse(ellipse_centre, 2*a, 2*b, angle=data['cap_ohm'], fill=False, color='b', linestyle='--')
+
         target = patches.Circle(r_vect, 
                                 0.2, 
                                 fill=True, 
                                 color=(random.random(), random.random(), random.random()),
                                 label=data['Name'])
 
-        ax.add_patch(target_orbit)
+        ax.add_patch(ellipse)
+        # ax.add_patch(target_orbit)
         ax.add_patch(target)
+        ax.plot(ellipse_centre, marker='*')
 
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
 
     # Set the axis limits to show the entire ellipse
-    lim = r_mag * 1.2
+    lim = r_mag
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
     ax.legend()
@@ -109,7 +137,7 @@ def main():
     now = current_time.strftime("%Y-%m-%d %H:%M:%S")
     
     # bodies = [i for i in range(3, 5)]
-    bodies = [3, 20065803, 4]
+    bodies = [3, 20065803 ]
     body_positions = []
 
     for body in bodies:
