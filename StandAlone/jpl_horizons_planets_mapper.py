@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
 
-from math import sqrt 
+from math import sqrt , atan2, pi, cos
 
 import functions
 
@@ -21,7 +21,7 @@ def create_json_obj(data:list):
 
     for object in data:
 
-        print(object)
+        # print(object)
 
         new_dict_obj = {}
         
@@ -93,18 +93,31 @@ def plot_vectors(bodies:list, canonical):
         target_orbit = patches.Circle(center, r_mag, fill=False, color='k', linestyle='--')
         
         ellipse_centre = (-a*e, 0)
-        ellipse = patches.Ellipse(ellipse_centre, 2*a, 2*b, angle=data['cap_ohm'], fill=False, color='b', linestyle='--')
+        ellipse = patches.Ellipse(ellipse_centre, 
+                                  2*a, 
+                                  2*b, 
+                                  angle=data['low_ohm'], 
+                                  fill=False, 
+                                  color='b', 
+                                  linestyle='--')
+        target_orbit = patches.Ellipse(ellipse_centre, 
+                                  2*a, 
+                                  2*b, 
+                                  angle=0, 
+                                  fill=False, 
+                                  color='k', 
+                                  linestyle='--')
 
         target = patches.Circle(r_vect, 
-                                0.2, 
+                                0.05, 
                                 fill=True, 
                                 color=(random.random(), random.random(), random.random()),
                                 label=data['Name'])
 
         ax.add_patch(ellipse)
-        # ax.add_patch(target_orbit)
+        ax.add_patch(target_orbit)
         ax.add_patch(target)
-        ax.plot(ellipse_centre, marker='*')
+        ax.plot(ellipse_centre[0], ellipse_centre[1], marker='*')
 
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
@@ -137,7 +150,7 @@ def main():
     now = current_time.strftime("%Y-%m-%d %H:%M:%S")
     
     # bodies = [i for i in range(3, 5)]
-    bodies = [3, 20065803 ]
+    bodies = [3] #, 20065803 ]
     body_positions = []
 
     for body in bodies:
@@ -160,8 +173,8 @@ def main():
         
                 # print(f'{}')
                 # for line in data['result']:
-                print(data['result'])
-                print("------------ END OF REQUEST --------------\n")
+                # print(data['result'])
+                # print("------------ END OF REQUEST --------------\n")
 
                 with open('request_output.json', "w") as json_file:
                     json.dump(data, json_file)
@@ -188,8 +201,21 @@ def main():
         except requests.exceptions.RequestException as e:
             print(f"Request exception: {e}")
 
+        # Vector checks
+        r_mag = sqrt(body_dict['X']**2 + body_dict['Y']**2)
+        r_ellipse = (body_dict['a'] * (1 - body_dict['e']**2) ) / \
+                    ( 1 + body_dict['e']*cos(body_dict['f'] * pi/180))
         
-    plot_vectors(body_positions, canonical=True)
+        theta = atan2(body_dict['Y'], body_dict['X']) * 180/pi
+        
+        print(f"Body: {body_dict['Name']}")
+        print(f'r_mag from vectors = {r_mag}')
+        print(f'r from ellipse eq  = {r_ellipse}')
+        
+        print(f'theta = {theta}')
+        print(f"arg periapse = {body_dict['low_ohm']}")
+
+    # plot_vectors(body_positions, canonical=True)
 
 
 if __name__ == '__main__':
