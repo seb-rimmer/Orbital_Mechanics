@@ -3,7 +3,7 @@
 # Description: 
 # 
 import numpy as np
-from math import acos, pi
+from math import acos, pi, cos, sin
 
 def a_from_vectors(r_vector: np.array,
                    v_vector: np.array,
@@ -140,6 +140,28 @@ def orbital_elems_from_vectors(r, v, mu):
 
     return elems_dict
 
+def radial_vect_from_orbital_elems(a, e, inc, cap_ohm, low_ohm, f):
+
+    i, j, k = np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])
+
+    # work out radial distance using standard eclipse formula
+    r = (a * (1 - e**2) ) / \
+        ( 1 + e*cos(f * pi/180))
+
+    # convert angles into radians
+    inc = inc * (pi/180)
+    low_ohm = low_ohm * (pi/180)
+    cap_ohm = cap_ohm * (pi/180)
+    theta = low_ohm + f * (pi/180)
+
+    # euler rotation vector transformation terms
+    i_term = cos(theta)*cos(cap_ohm) - cos(inc)*sin(cap_ohm)*sin(theta)
+    j_term = cos(theta)*sin(cap_ohm) + cos(inc)*cos(cap_ohm)*sin(theta)
+    k_term = sin(inc)*sin(theta)
+
+    r = r * (i_term*i + j_term*j + k_term*k)
+
+    return r
 
 def main():
 
@@ -150,6 +172,9 @@ def main():
     elems = orbital_elems_from_vectors(r, v, mu)
 
     print(elems)
+
+    r_vector_check = radial_vect_from_orbital_elems(elems['a'], elems['e'], elems['i'], elems['cap_ohm'], elems['low_ohm'], elems['f'])
+    print(r_vector_check)
 
     pass
 
