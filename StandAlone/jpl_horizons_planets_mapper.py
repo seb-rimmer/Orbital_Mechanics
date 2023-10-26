@@ -88,25 +88,17 @@ def plot_vectors(bodies:list, canonical):
 
         r_vect = np.array([x, y])
         r_mag = np.linalg.norm(r_vect)
-
-        # Plot target orbit
-        target_orbit = patches.Circle(center, r_mag, fill=False, color='k', linestyle='--')
         
-        ellipse_centre = (-a*e, 0)
-        ellipse = patches.Ellipse(ellipse_centre, 
-                                  2*a, 
-                                  2*b, 
-                                  angle=data['low_ohm'], 
-                                  fill=False, 
-                                  color='b', 
-                                  linestyle='--')
-        target_orbit = patches.Ellipse(ellipse_centre, 
-                                  2*a, 
-                                  2*b, 
-                                  angle=0, 
-                                  fill=False, 
-                                  color='k', 
-                                  linestyle='--')
+        # Plot target orbit
+        f = np.linspace(0, 360, 360)
+        r_vectors_check = np.array([functions.radial_vect_from_orbital_elems(data['a'], 
+                                                                  data['e'], 
+                                                                  data['i'], 
+                                                                  data['cap_ohm'], 
+                                                                  data['low_ohm'], 
+                                                                  pos) for pos in f])
+        
+        x, y = [pos[0]/divider for pos in r_vectors_check], [pos[1]/divider for pos in r_vectors_check]
 
         target = patches.Circle(r_vect, 
                                 0.05, 
@@ -114,10 +106,8 @@ def plot_vectors(bodies:list, canonical):
                                 color=(random.random(), random.random(), random.random()),
                                 label=data['Name'])
 
-        ax.add_patch(ellipse)
-        ax.add_patch(target_orbit)
         ax.add_patch(target)
-        ax.plot(ellipse_centre[0], ellipse_centre[1], marker='*')
+        ax.plot(x, y, color='k', linestyle='--', linewidth=0.5)
 
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
