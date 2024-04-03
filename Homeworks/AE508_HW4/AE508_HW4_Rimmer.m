@@ -96,12 +96,12 @@ while (rho > 1e-3)
     lam_v = X_minU(:,8);
 
     % Needs to be vec norm
-    u_1 = -(lam_u./vecnorm([lam_u lam_v], 2, 2));
-    u_2 = -(lam_v./vecnorm([lam_u lam_v], 2, 2));
+    u_1 = -(lam_u./norm([lam_u lam_v], 2));
+    u_2 = -(lam_v./norm([lam_u lam_v], 2));
     
     % Determining switch function and thrust profile for iteration
     p = -[lam_u, lam_v];
-    s_t = vecnorm(p, 2, 2) - 1; 
+    s_t = norm(p, 2) - 1; 
     throttle = arrayfun(@delta,  rho* ones(length(lam_u),1), lam_u, lam_v);
     thrust = T_N .* throttle;
     
@@ -166,8 +166,8 @@ lam_u     = X(7);
 lam_v     = X(8);
 % lam_m     = X(10);    % Can comment this out along with line 190
 
-u_1 = - lam_u./vecnorm([lam_u lam_v], 2, 2);
-u_2 = - lam_v./vecnorm([lam_u lam_v], 2, 2);
+u_1 = - lam_u./norm([lam_u lam_v], 2);
+u_2 = - lam_v./norm([lam_u lam_v], 2);
 d   =   delta(rho, lam_u, lam_v);
 
 % State Differential Equations
