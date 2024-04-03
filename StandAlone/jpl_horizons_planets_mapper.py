@@ -59,7 +59,7 @@ def create_json_obj(data:list):
         new_dict_obj['low_ohm'] = functions.arg_of_periapse(r, v, mu)
         new_dict_obj['f'] = functions.true_anom_f(r, v, mu)
 
-        print(new_dict_obj)
+        # print(new_dict_obj)
 
     return new_dict_obj
 
@@ -68,8 +68,10 @@ def plot_vectors(bodies:list, canonical):
 
     if canonical:
         divider = 149597871
+        radius = 149597871/10
     else:
         divider = 1
+        radius = 0.05
 
     #  Create a figure and axis
     fig, ax = plt.subplots()
@@ -101,7 +103,7 @@ def plot_vectors(bodies:list, canonical):
         x, y = [pos[0]/divider for pos in r_vectors_check], [pos[1]/divider for pos in r_vectors_check]
 
         target = patches.Circle(r_vect, 
-                                0.05, 
+                                1e7, 
                                 fill=True, 
                                 color=(random.random(), random.random(), random.random()),
                                 label=data['Name'])
@@ -140,7 +142,7 @@ def main():
     now = current_time.strftime("%Y-%m-%d %H:%M:%S")
     
     # bodies = [i for i in range(3, 5)]
-    bodies = [3] #, 20065803 ]
+    bodies = [3, 4, 20065803 ]
     body_positions = []
 
     for body in bodies:
@@ -199,13 +201,21 @@ def main():
         theta = atan2(body_dict['Y'], body_dict['X']) * 180/pi
         
         print(f"Body: {body_dict['Name']}")
-        print(f'r_mag from vectors = {r_mag}')
-        print(f'r from ellipse eq  = {r_ellipse}')
-        
-        print(f'theta = {theta}')
-        print(f"arg periapse = {body_dict['low_ohm']}")
+        print(f"{body_dict['X']}")
+        print(f"{body_dict['Y']}")
+        print(f"{body_dict['Z']}")
+        print(f"{body_dict['VX']}")
+        print(f"{body_dict['VY']}")
+        print(f"{body_dict['VZ']}")
 
-    # plot_vectors(body_positions, canonical=True)
+
+        # print(f'r_mag from vectors = {r_mag}')
+        # print(f'r from ellipse eq  = {r_ellipse}')
+        
+        # print(f'theta = {theta}')
+        # print(f"arg periapse = {body_dict['low_ohm']}")
+
+    plot_vectors(body_positions, canonical=False)
 
 
 if __name__ == '__main__':
