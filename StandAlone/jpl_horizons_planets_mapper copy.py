@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import random
 
-from math import sqrt , atan2, pi, cos
+from math import sqrt , atan2, pi, cos, acos
 
 import functions
 
@@ -63,6 +63,106 @@ def eccentricity_from_vectors(r_vector: np.array,
 
     return ecc_vector, ecc_mag
 
+def inclination(r_vector: np.array,
+                v_vector: np.array,) -> tuple:
+    """
+    Return inclination angle of orbit
+    """
+    h_vector = np.cross(r_vector, v_vector)
+    h_mag = np.linalg.norm(h_vector)
+    h_norm = h_vector / h_mag
+    
+    k = np.array([0, 0, 1])
+
+    cos_i = np.dot(h_norm, k)
+
+    # math.acos returns values in radians
+    i_radians = acos(cos_i)
+
+    return i_radians * 180/pi
+
+def ra_o_an(r_vector, v_vector) -> tuple:
+    """
+    Return Right Angle of Ascending Node of orbit
+
+    """
+
+    h_vector = np.cross(r_vector, v_vector)
+    h_mag = np.linalg.norm(h_vector)
+    h_norm = h_vector / h_mag
+
+    n_vector = np.cross([0,0,1], h_norm)
+    n_mag = np.linalg.norm(n_vector)
+    n_norm = n_vector / n_mag
+
+    cos_omega = np.dot(n_norm, [1, 0, 0])
+    
+    # math.acos returns values in radians
+    ra_o_an = acos(cos_omega)
+
+    if np.dot(n_vector, [0, 1, 0]) < 0:
+        ra_o_an = 2*pi - ra_o_an
+
+    return ra_o_an  * 180/pi
+
+
+def arg_of_periapse(r_vector, v_vector, mu) -> tuple:
+    """
+    Return the argument of periapce of orbit
+
+    """
+    e_vector = eccentricity_from_vectors(r_vector, v_vector, mu)[0]
+
+    h_vector = np.cross(r_vector, v_vector)
+    h_mag = np.linalg.norm(h_vector)
+    h_norm = h_vector / h_mag
+
+    n_vector = np.cross([0,0,1], h_norm)
+    n_mag = np.linalg.norm(n_vector)
+
+    cos_w = np.dot(n_vector, e_vector) / (n_mag * np.linalg.norm(e_vector))
+
+    # math.acos returns values in radians
+    arg_of_p = acos(cos_w)
+
+    if np.dot(e_vector, [0, 0, 1]) < 0:
+        arg_of_p = 2*pi - arg_of_p
+    
+    return arg_of_p * 180/pi
+
+
+def true_anom_f(r_vector, v_vector, mu) -> tuple:
+    """
+    Returns true anomaly of position in orbit
+
+    """
+
+    e_vector = eccentricity_from_vectors(r_vector, v_vector, mu)[0]
+    e_mag = np.linalg.norm(e_vector)
+    r_mag = np.linalg.norm(r_vector)
+
+    cos_f = np.dot(e_vector, r_vector) / (e_mag * r_mag)
+
+    # math.acos returns values in radians
+    true_anom_f = acos(cos_f)
+
+    if np.dot(r_vector, v_vector) < 0:
+        true_anom_f = 2*pi - true_anom_f
+    
+    return true_anom_f * 180/pi
+
+def orbital_elems_from_vectors(r, v, mu):
+
+    elems_dict = {}
+
+    elems_dict['a'] = a_from_vectors(r, v, mu)
+    elems_dict['e'] = eccentricity_from_vectors(r, v, mu)[1]
+    elems_dict['i'] = inclination(r, v)
+    elems_dict['cap_ohm'] = ra_o_an(r, v)
+    elems_dict['low_ohm'] = arg_of_periapse(r, v, mu)
+    elems_dict['f'] = true_anom_f(r, v, mu)
+
+    return elems_dict
 
 def initial_eccentric_anom(r_vector: np.array,
                            v_vector: np.array,
@@ -327,8 +427,8 @@ def plot_vectors(bodies:list, canonical):
         target = patches.Circle(r_vect, 
                                 1e7, 
                                 fill=True, 
-                                color=(random.random(), random.random(), random.random()),
-                                label=f"{data['name']} ,  {data['start_time']}")
+                                color=data['color'],
+                                label=f"{data['name']} ,  {data['Time']}")
 
         ax.add_patch(target)
         ax.plot(x, y, color='k', linestyle='--', linewidth=0.5)
@@ -353,6 +453,22 @@ def plot_vectors(bodies:list, canonical):
 
     return 0
 
+def jpl_horizons_request(body, time):
+
+    api_url = 'https://ssd.jpl.nasa.gov/api/horizons.api'
+    api_url += "?format=json&EPHEM_TYPE=VECTORS&OBJ_DATA=NO"
+    api_url += f"&COMMAND='{body}'"
+    api_url += f"&CENTER='*@sun'"
+    api_url += f"&TLIST='{time}'"
+
+    response = requests.get(api_url)
+
+    if response.status_code == 200:
+                    # The response content will contain the data returned by the API
+                    return response.json()  # Assuming the response is in JSON format
+    else:
+        return 0
+
 
 def main():
 
@@ -373,6 +489,9 @@ def main():
     # Didymos/Dimorhpos Barycentre - 20065803
 
     bodies = [3, 4, 20065803]
+    colors_dict = {3:'green', 4:'orange', 20065803:'darkgrey'}
+    mu_sun = float(1.32712440018E+11)
+
     body_positions = []
     time = launch_date
     time_label = " at launch"
@@ -381,28 +500,15 @@ def main():
 
         for body in bodies:
             
-            api_url = 'https://ssd.jpl.nasa.gov/api/horizons.api'
-            api_url += "?format=json&EPHEM_TYPE=VECTORS&OBJ_DATA=NO"
-            api_url += f"&COMMAND='{body}'"
-            api_url += f"&CENTER='*@sun'"
-            api_url += f"&TLIST='{time}'"
-
             # Help query:
 
             try:
-                response = requests.get(api_url)
+                
+                data = jpl_horizons_request(body, time)
 
                 # Check if the request was successful (status code 200)
-                if response.status_code == 200:
-                    # The response content will contain the data returned by the API
-                    data = response.json()  # Assuming the response is in JSON format
-            
-                    # print(f'{}')
-                    # for line in data['result']:
-                    # print(data['result'])
-                    # print("------------ END OF REQUEST --------------\n")
+                if data != 0:
 
-                    # Check request for an error message:
                     try:
                         if data['error']:
                             print(f"Error in request for : {data['error']} ")
@@ -420,7 +526,6 @@ def main():
                                 dt_datetime = time - launch_date
                                 dt_seconds = dt_datetime.days * 3600
 
-                                mu_sun = float(1.32712440018E+11)
                                 r1_vector, v1_vector = r_and_v_as_function_of_t(mu_sun, r0_vector, v0_vector, dt_seconds)
 
                                 print(r1_vector)
@@ -436,6 +541,8 @@ def main():
                                                             v1_vector[2]
                                                             )
 
+                                body_dict['Time'] = time_label
+                                body_dict['color'] = colors_dict[body]
                                 body_positions += [body_dict]
 
                     except KeyError:                     
@@ -495,7 +602,15 @@ def main():
                                                     float(vector_set[4][vz_index:vz_index+22])
                                                     )
                         
+                        # r0 = np.array([body_dict['X'], body_dict['Y'], body_dict['Z'] ])
+                        # v0 = np.array([body_dict['VX'], body_dict['VY'], body_dict['VZ'] ])
+
+                        # elems_dict = orbital_elems_from_vectors(r0, v0, mu_sun)
+                        # with open('output/elems_output.json', 'a') as output:
+                        #     json.dump(elems_dict, output, indent=4)
+
                         body_dict['Time'] = time_label
+                        body_dict['color'] = colors_dict[body]
 
                         body_positions += [body_dict]
                         print(f"Body: {body_dict['name']}")
