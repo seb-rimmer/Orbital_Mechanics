@@ -450,6 +450,7 @@ def plot_vectors(bodies:list, canonical):
     # Show the plot
     plt.grid()
     plt.show()
+    plt.savefig('bodies_at_depart_and_arrive.png')
 
     return 0
 
@@ -488,7 +489,7 @@ def main():
     # Mars - 4
     # Didymos/Dimorhpos Barycentre - 20065803
 
-    bodies = [3, 4, 20065803]
+    bodies = [3, 20065803]
     colors_dict = {3:'green', 4:'orange', 20065803:'darkgrey'}
     mu_sun = float(1.32712440018E+11)
 
@@ -602,18 +603,26 @@ def main():
                                                     float(vector_set[4][vz_index:vz_index+22])
                                                     )
                         
-                        # r0 = np.array([body_dict['X'], body_dict['Y'], body_dict['Z'] ])
-                        # v0 = np.array([body_dict['VX'], body_dict['VY'], body_dict['VZ'] ])
-
-                        # elems_dict = orbital_elems_from_vectors(r0, v0, mu_sun)
-                        # with open('output/elems_output.json', 'a') as output:
-                        #     json.dump(elems_dict, output, indent=4)
-
                         body_dict['Time'] = time_label
                         body_dict['color'] = colors_dict[body]
 
                         body_positions += [body_dict]
                         print(f"Body: {body_dict['name']}")
+
+                        # with open('output/bodies_output.json', 'a') as output:
+                        #     json.dump(body_dict, output, indent=4)
+
+                        # Load existing JSON data
+                        with open('output/bodies_output.json', 'r') as f:
+                            existing_data = json.load(f)
+
+                        # Append new JSON object to existing data
+                        existing_data.append(body_dict)
+
+                        # Write the updated data back to the file
+                        with open('output/bodies_output.json', 'w') as f:
+                            json.dump(existing_data, f, indent=4)
+
 
                 else:
                     print(f"Request failed with status code: {response.status_code}")
