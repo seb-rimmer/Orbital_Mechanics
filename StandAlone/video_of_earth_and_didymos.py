@@ -82,18 +82,22 @@ def main():
     ax.add_patch(circle)
     scat_e = ax.scatter(x_e[0], y_e[0], color='blue')
     scat_d = ax.scatter(x_d[0], y_d[0], color='gray')
+    
+    start_day = 0
+    title = ax.text(2e8, 2e8, f'time = {start_day} days')
+    
     plt.axis('equal')
     plt.grid(True)
     # plt.show()
 
-    # ani = animation.FuncAnimation(fig=fig, func=update, fargs=(scat_e, x_e, y_e, scat_d, x_d, y_d), frames=dt_days, interval=10, repeat=False)
+    ani = animation.FuncAnimation(fig=fig, func=update, fargs=(scat_e, x_e, y_e, scat_d, x_d, y_d, title), frames=dt_days, interval=10, repeat=False)
     plt.show()
 
     # ani.save(filename="tmp/pillow_example.apng", writer="pillow")
 
     return 0
 
-def update(frame, scat_e, x_e, y_e, scat_d, x_d, y_d):
+def update(frame, scat_e, x_e, y_e, scat_d, x_d, y_d, title):
 
     # for each frame, update the data stored on each artist.
     x_t_e = x_e[frame]
@@ -107,6 +111,9 @@ def update(frame, scat_e, x_e, y_e, scat_d, x_d, y_d):
 
     scat_e.set_offsets(data_e)
     scat_d.set_offsets(data_d)
+
+    # update title
+    title.set_text(f'time = {frame} days')
 
     return (scat_e, scat_d)
 
