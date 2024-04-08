@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import matplotlib.patches as patches
 import cv2
 
 import json
@@ -45,42 +46,69 @@ def main():
     
     mu_sun = float(1.32712440018E+11)   
     start = datetime.datetime.strptime(earth['start_time'], '%Y-%b-%d %H:%M:%S.%f')
-    end = datetime.datetime(2026, 10, 16)
+    end = datetime.datetime(2026, 12, 16)
 
     dt_days = (end - start).days
-    r0_vector = np.array([earth['X'], earth['Y'], earth['Z']])
-    v0_vector = np.array([earth['VX'], earth['VY'], earth['VZ']])  
+    r0_vector_earth,  v0_vector_earth = np.array([earth['X'], earth['Y'], earth['Z']]), np.array([earth['VX'], earth['VY'], earth['VZ']])
+    r0_vector_didymos,  v0_vector_didymos = np.array([didymos['X'], didymos['Y'], didymos['Z']]), np.array([didymos['VX'], didymos['VY'], didymos['VZ']])
     
-    x, y = [], []
+    x_e, y_e = [], []
+    x_d, y_d = [], []
+
     for i in range(dt_days):
         
-        r1_vector, v1_vector = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector, v0_vector, 24*3600)
-        
-        # print(r1_vector)
-        x.append(r1_vector[0])
-        y.append(r1_vector[1])
+        r1_vector_e, v1_vector_e = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_earth, v0_vector_earth, 24*3600)
+        r1_vector_d, v1_vector_d = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_didymos, v0_vector_didymos, 24*3600)
 
-        r0_vector, v0_vector = r1_vector, v1_vector
+        x_e.append(r1_vector_e[0])
+        y_e.append(r1_vector_e[1])
+        x_d.append(r1_vector_d[0])
+        y_d.append(r1_vector_d[1])
+
+        r0_vector_earth, v0_vector_earth = r1_vector_e, v1_vector_e
+        r0_vector_didymos, v0_vector_didymos = r1_vector_d, v1_vector_d
+    
+    x_e, y_e, = np.array(x_e), np.array(y_e)
+    x_d, y_d, = np.array(x_d), np.array(y_d)
 
     ## Video plot
     # ----------------------------
     
     # Define the figure
     fig, ax = plt.subplots()
-    
-    # Initialize the video writer - saving as mp4 file broken for now ... 
-    output_video = cv2.VideoWriter('xy_data_video.mp4', cv2.VideoWriter_fourcc(*'MJPEG'), 30, (640, 480), False)
+    ax.plot(x_e, y_e, '--', color='k', linewidth=0.5)
+    ax.plot(x_d, y_d, '--', color='k', linewidth=0.5)
+    circle = patches.Circle((2.5, 20), radius=149597871/10, edgecolor='orange', facecolor='orange')
+    ax.add_patch(circle)
+    scat_e = ax.scatter(x_e[0], y_e[0], color='blue')
+    scat_d = ax.scatter(x_d[0], y_d[0], color='gray')
+    plt.axis('equal')
+    plt.grid(True)
+    # plt.show()
 
-    # Create the animation
-    ani = animation.FuncAnimation(fig, update, frames=len(x), fargs=(x, y, fig, ax, output_video), interval=50)
-
-    # Close the video writer
-    output_video.release()
-
+    # ani = animation.FuncAnimation(fig=fig, func=update, fargs=(scat_e, x_e, y_e, scat_d, x_d, y_d), frames=dt_days, interval=10, repeat=False)
     plt.show()
+
+    # ani.save(filename="tmp/pillow_example.apng", writer="pillow")
 
     return 0
 
+def update(frame, scat_e, x_e, y_e, scat_d, x_d, y_d):
+
+    # for each frame, update the data stored on each artist.
+    x_t_e = x_e[frame]
+    y_t_e = y_e[frame]
+    x_t_d = x_d[frame]
+    y_t_d = y_d[frame]
+    
+    # update the scatter plot:
+    data_e = np.stack([x_t_e, y_t_e]).T
+    data_d = np.stack([x_t_d, y_t_d]).T
+
+    scat_e.set_offsets(data_e)
+    scat_d.set_offsets(data_d)
+
+    return (scat_e, scat_d)
 
 if __name__ == '__main__':
     main()
