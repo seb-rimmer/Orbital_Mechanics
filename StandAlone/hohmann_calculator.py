@@ -32,12 +32,14 @@ def hohmann(r1, r2, mu):
 def main():
 
     # System constants
-    TU = (3.137 * 10**7) / (2*pi)
-    AU = 149_597_871  # km for 1 AU for canonical units
 
-    r1 = 6678+400
-    r2 = 42241
-    mu = 4e5
+    mu_sun = 1.327e11
+    AU = 149_597_871  # km for 1 AU for canonical units
+    TU = sqrt(AU**3 / mu_sun)
+
+    r1 = 1
+    r2 = 1.64
+    mu = 1
     result = hohmann(r1, r2, mu)
 
     if mu == 1:
@@ -49,7 +51,7 @@ def main():
         dT_days = dT_canon * TU / (24 * 3600)
 
         print(f"Delta-v required to get from Earth to orbit at {r2} AU on a Hohmann transfer is: \n {dv_canon:.4f} AU/TU \n {dv_kms:.4f} km/s ")
-        print(f"Transfer will take: {dT_canon:.4f} TU , or {dT_days:.4f} days")
+        print(f"Transfer will take: {dT_canon:.4f} TU , or {dT_days:.4f} days, {dT_days/365:.2f} years.")
 
     else:
         dv_kms = result[0]
