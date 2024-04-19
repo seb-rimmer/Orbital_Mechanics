@@ -81,7 +81,7 @@ def plot_vectors(bodies:list, canonical):
     for data in bodies:
 
         # Plot things as an ellipse, so need to calculate semi-minor axis:
-        e = data['e']
+        e = np.linalg.norm(data['e'])
         a = data['a'] / divider
         b = sqrt( a**2 - (e*a)**2 )
 
