@@ -2,3 +2,5 @@ request_output.json
 StandAlone/HERA_B2_MA2GNC.json
 StandAlone/Positions.xlsx
 *.txt
+*.png
+*.json
