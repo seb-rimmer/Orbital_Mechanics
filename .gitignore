@@ -4,3 +4,7 @@ StandAlone/Positions.xlsx
 *.txt
 *.png
 *.json
+StandAlone/__pycache__/*
+*.apng
+*.gif
+Homeworks/AE402_HW3/__pycache__/ellipse_plotter.cpython-37.pyc
