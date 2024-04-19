@@ -11,10 +11,10 @@ import json
 import datetime
 import functions
 
-def update(slider, scat_e, x_e, y_e, scat_d, x_d, y_d,scat_m, x_m, y_m, text_annotation):
+def update(slider, scat_e, x_e, y_e, scat_d, x_d, y_d,scat_m, x_m, y_m, text_annotation, start):
 
 
-    date_0 = datetime.datetime(2019, 10, 26)
+    date_0 = start
     selected_date = date_0 + datetime.timedelta(days=int(slider))
     text_annotation.set_text(selected_date.strftime("%Y-%m-%d"))
 
@@ -140,7 +140,7 @@ def main():
     text_annotation = ax_slider.text(1.05, 0.5, '', transform=ax_slider.transAxes, va='center')
     text_annotation.set_text((start + datetime.timedelta(days=int(sDays.val))).strftime("%Y-%m-%d"))
 
-    sDays.on_changed(lambda val: update(val, scat_e, x_e, y_e, scat_d, x_d, y_d, scat_m, x_m, y_m, text_annotation))
+    sDays.on_changed(lambda val: update(val, scat_e, x_e, y_e, scat_d, x_d, y_d, scat_m, x_m, y_m, text_annotation, start))
     sDays.valtext.set_visible(False)
 
     # Calculating the distance for transfer opps
