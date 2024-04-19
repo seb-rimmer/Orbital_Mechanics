@@ -8,7 +8,7 @@ import cv2
 
 import json
 import datetime
-import jpl_horizons_planets_mapper_copy
+import functions
 
 def update(slider, scat_e, x_e, y_e, scat_d, x_d, y_d,scat_m, x_m, y_m):
 
@@ -39,7 +39,7 @@ def main():
     # ----------------------------
 
     # Path to the JSON file
-    file_path = r"C:\Users\Sebastian.Rimmer\OneDrive - ESA\Documents\Learning\Orbital_Mechanics\output\bodies_output.json"
+    file_path = r"C:\Users\Sebastian.Rimmer\OneDrive - ESA\Documents\Learning\Orbital_Mechanics\output\bodies_output_static.json"
 
     # Load the JSON file into a dictionary
     with open(file_path, 'r') as f:
@@ -66,9 +66,9 @@ def main():
 
     for i in range(dt_days):
         
-        r1_vector_e, v1_vector_e = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_earth, v0_vector_earth, 24*3600)
-        r1_vector_d, v1_vector_d = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_didymos, v0_vector_didymos, 24*3600)
-        r1_vector_m, v1_vector_m = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_mars, v0_vector_mars, 24*3600)
+        r1_vector_e, v1_vector_e = functions.r_and_v_as_function_of_t(mu_sun, r0_vector_earth, v0_vector_earth, 24*3600)
+        r1_vector_d, v1_vector_d = functions.r_and_v_as_function_of_t(mu_sun, r0_vector_didymos, v0_vector_didymos, 24*3600)
+        r1_vector_m, v1_vector_m = functions.r_and_v_as_function_of_t(mu_sun, r0_vector_mars, v0_vector_mars, 24*3600)
 
         x_e.append(r1_vector_e[0])
         y_e.append(r1_vector_e[1])
