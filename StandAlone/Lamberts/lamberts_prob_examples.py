@@ -82,7 +82,7 @@ def main():
 
     # Some examples to test
     # example var can be j, v, or m
-    
+    example = 'm'    
     if example == 'j':
         # Jupiter
         theta_d = 147
@@ -95,14 +95,14 @@ def main():
         theta_d = 135
         r0 = 1
         rf = 0.723
-        tf_days = 337
+        tf_days = 400
     
     elif example == 'm':
         # Mars
-        theta_d = 75
+        theta_d = 175
         r0 = 1
         rf = 1.524
-        tf_days = 115
+        tf_days = 250
 
     # Angle between vectors
     theta = theta_d * pi/180
@@ -120,7 +120,7 @@ def main():
     u_1 = r0 / np.linalg.norm(r0)
     u_2 = rf / np.linalg.norm(rf)
 
-    # Time of flight
+    # Time of flight converted to TU
     tf = (tf_days/365.25) * 2 * pi
 
     r1 = np.linalg.norm(r0)
@@ -130,20 +130,28 @@ def main():
     c = sqrt(r1**2 + r2**2 - 2*r1*r2*cos(theta))
     u_c = (rf - r0) / c
 
+    # spacetrianlge semiperimeter
     s = (r1 + r2 + c) / 2
 
-    # Step 1 - Compute minimum transfer time
-    t_p = sqrt(2) / (3 * sqrt(mu)) * (s**1.5 - np.sign(sin(theta))*(s - c)**1.5)
-    
     # Step 3 - Compute the minimum semi-major axis for the transfer ellipse
     a_m = s/2
+    
+    # Step 1 - Compute minimum transfer time (days)
+    tp = 1/3 * sqrt(2/mu) * (s**1.5 - np.sign(sin(theta))*(s - c)**1.5)
+    
+    if tf > tp:
+        # elliptic transfer orbit exists.
+        print(f'Elliptic transfer ellipse possible; min possible transfer time is {tp:3.2f} TU, chosen transfer time is: {tf_days/365.25:3.2f} TU.')
+    else:
+        # orbit transfer must be parabolic - we don't do that here
+        print('Desired transfer time is less than minimum possible transfer time, transfer not possible.')
 
     # Step 2 - Compute the principal values of alpha and beta from minimum sma
     alpha0 = 2 * asin( sqrt(  (s)   / (2*a_m) ) ) 
     beta0  = 2 * asin( sqrt(  (s-c) / (2*a_m) ) )
 
-    # Step 4 - Compute the time corresponding to the minimum semimajor axis transfer ellipse
-    tm = sqrt((s**3) / 8) * (pi - beta0 + sin(beta0))
+    # Step 4 - Compute the transfer time corresponding to the minimum semimajor axis transfer ellipse
+    tm = sqrt(a_m**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
 
     # Step 5 - Determine initial values of alpha and beta
     if theta <= pi:
