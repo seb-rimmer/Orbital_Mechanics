@@ -11,7 +11,7 @@ def lamberts_equation(a, s, c):
 
     return tof
 
-def newton_lambert_solver(a0, s, c):
+def newton_lambert_solver(a0, s, c, tof):
 
     # Use Newton's method to return a value for variable a to within precision
     # specified by delta, for the function tof = f(a)
@@ -27,7 +27,7 @@ def newton_lambert_solver(a0, s, c):
     f_d_a0 = (0.5 * sqrt(a0)) * (sin(zeta) + sin(alph) - sin(beta))**-1 * g_a0
 
     # f(a0)
-    f_a0 = a0**(3/2) * (alph - beta - (sin(alph)-sin(beta))) - 1.98
+    f_a0 = a0**(3/2) * (alph - beta - (sin(alph)-sin(beta))) - tof
 
     a1 = a0 - f_a0/f_d_a0
 
@@ -35,8 +35,9 @@ def newton_lambert_solver(a0, s, c):
 
 def main():
 
-    s = 2.058
-    c = 1.592
+    tof_TU  = 1.9782787414802256
+    s = 2.0578793172534886
+    c = 1.5917586345069774
     a0 = s/2 * 1.00001
     a1 = 10*a0    
     # check lamberts eq
@@ -48,10 +49,10 @@ def main():
     diff = abs(a1-a0)
     while diff > 1e-6:
         # a0 = a1
-        a1 = newton_lambert_solver(a0, s, c)
+        a1 = newton_lambert_solver(a0, s, c, tof_TU)
         new_tof = lamberts_equation(a1, s, c)
 
-        print(f"a: {a1}, TU: {new_tof}, diff = {abs(a1-a0)}")
+        print(f"a: {a1}, TU: {new_tof}, diff = {abs(a1-a0)}, diff to fsolve result: {abs(a1-1.2321040153545382)}")
         diff = abs(a1-a0)
         
         a0=a1
