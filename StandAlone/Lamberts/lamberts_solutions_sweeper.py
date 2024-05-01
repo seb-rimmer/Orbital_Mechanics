@@ -50,9 +50,42 @@ def lamberts_time_equation_solver_upper_branch(vars, tf, s, c):
             beta - b2,
             tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
 
-def lamberts_time_equation_tf_TU(a, alpha, beta):
+def lamberts_equation(a, s, c):
 
-    return (a**(3/2))*(alpha-beta-sin(alpha)+sin(beta))
+    alph = 2*pi - 2*asin(sqrt(s/(2*a)))
+    beta = 2*asin(sqrt((s-c)/(2*a)))
+    tof = a**(3/2) * (alph - beta - (sin(alph)-sin(beta)))
+
+    return tof
+
+def newton_lambert_solver(a0, s, c, tof, branch, biggerThetaTransfer):
+
+    # Use Newton's method to return a value for variable a to within precision
+    # specified by delta, for the function tof = f(a)
+    alph = 2*asin(sqrt(s/(2*a0)))
+    beta = 2*asin(sqrt((s-c)/(2*a0)))
+    zeta = alph - beta
+
+    if branch:
+        alph = alph
+    else:
+        alph = 2*pi - alph
+
+    if biggerThetaTransfer:
+        beta = -beta
+
+    # g(a0)
+    g_a0 = (3*zeta - sin(alph) + sin(beta)) * (sin(zeta) + sin(alph) - sin(beta) ) - 8*(1-cos(zeta))
+
+    # f'(a0)
+    f_d_a0 = (0.5 * sqrt(a0)) * (sin(zeta) + sin(alph) - sin(beta))**-1 * g_a0
+
+    # f(a0)
+    f_a0 = a0**(3/2) * (alph - beta - (sin(alph)-sin(beta))) - tof
+
+    a1 = a0 - f_a0/f_d_a0
+
+    return a1, alph, beta
 
 def main():
 
@@ -135,7 +168,6 @@ def main():
 
     # Step 3 - Compute the minimum semi-major axis for the transfer ellipse
     a_m = s/2
-    print(f"Minimum energy ellipse sma = {a_m}")
 
     # Step 1 - Compute minimum transfer time (days)
     tp = 1/3 * sqrt(2/mu) * (s**1.5 - np.sign(sin(theta))*(s - c)**1.5)
@@ -153,7 +185,9 @@ def main():
 
     # Step 4 - Compute the transfer time corresponding to the minimum semimajor axis transfer ellipse
     tm = sqrt(a_m**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
-    
+
+    print(f"Minimum energy ellipse sma = {a_m}, corresponding tof: {tm}")
+
     # Do sweep and plot for semimajor axis vs tof
     # a_m = a_m * 1.1
     a_sweep = np.linspace(a_m, 1.5, 100)
@@ -185,44 +219,67 @@ def main():
     plt.plot(a_sweep, t_fx_bottom)
     plt.plot(a_sweep, t_fx_top)    
 
+    # plot additional data for tm, am etc
+    plt.plot([a_m, a_m], [0, tm], 'r--', label='Minimum energy sma')
+    plt.plot([0, a_m], [tm, tm], 'r--', label='ToF corresponding to minimum energy sma')
+
+    plt.plot([0, 2], [tf, tf], 'r--', label='Chosen ToF')
+
     ax.set_xlim(a_m*0.9,a_m* 1.5)
-    # ax.set_ylim(0, 2)
+    ax.set_ylim(0, 12)
 
     # Optional: Add labels and title
     plt.xlabel('Semi-major axis (AU)')
     plt.ylabel('Time of flight (TU)')
     plt.title('Plotting semi-major axis sweep')
+    plt.legend()
 
     # Show the plot
     plt.grid()
-    plt.show()
+    # plt.show()
 
     # Step 5 - Determine initial values of alpha and beta
-    if theta <= pi:
+    biggerThetaTransfer = (theta <= pi)
+    if not biggerThetaTransfer:
         beta = beta0
     else:
         beta = -beta0
 
-    if tf <= tm:
+    # which branch; upper is false, lowwer is true
+    branch = (tf <= tm)
+    if branch:
         alpha = alpha0
     else:
         alpha = 2*pi - alpha0
 
     # Step 6 - Numerically solve lambert's time equation for semimajor axis
     #
-    # lamberts_time_equation(a, s, c, tf)
-    # initial guess of a needs to be a bit further away from a_m so we don't hit a 
-    # singularity with asin() calcualtions
-    x0 = [a_m*1.2, alpha0, beta0]
+    # legacy fsolve replaced with newton's method
+    # x0 = [a_m*1.2, alpha0, beta0]
+    # if tf > tm:
+    #     solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
+    # else:
+    #     solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
+    a0 = a_m*1.00001
+    a1 = 10*a0
+    diff = abs(a1-a0)
+    print(a0, s/(a0*2), s, c)
+    while diff > 1e-6:
+        
+        # a0 = a1
+        a1, alpha, beta = newton_lambert_solver(a0, s, c, tf, branch, biggerThetaTransfer)
+        print(a1, s/(a1*2), s, c, alpha, beta)
 
-    if tf > tm:
-        solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
-    else:
-        solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
-    
-    a, alpha, beta = [x for x in solutions]
-    
-    print(f'Solution: x = {solutions}')
+        new_tf = lamberts_equation(a1, s, c)
+        
+        # print(f"a: {a1}, TU: {new_tof}, diff = {abs(a1-a0)}, diff to fsolve result: {abs(a1-1.2321040153545382)}")
+        
+        diff = abs(a1-a0)
+        
+        a0=a1
+
+    a = a1
+    # print(f'Solution: x = {[a1, alpha, beta]}')
 
     # Step 7 - Compute terminal velocity vectors v1 and v2
     
@@ -242,6 +299,10 @@ def main():
     print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
 
     # Step 9 - Plot trajectories, start points and end points
+
+    # calculate eccentricity for transfer orbit (from Eq 5.40 in prussing)
+    p = sin((alpha+beta)/2)**2 * (4*a *(s - r1)*(s - r2)) / (c**2)
+    e = sqrt(1 - p/a) 
     plot_transfer(rf, a, theta)
 
 if __name__ == '__main__':

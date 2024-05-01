@@ -5,8 +5,6 @@ def lamberts_equation(a, s, c):
 
     alph = 2*asin(sqrt(s/(2*a)))
     beta = 2*asin(sqrt((s-c)/(2*a)))
-    zeta = alph - beta
-
     tof = a**(3/2) * (alph - beta - (sin(alph)-sin(beta)))
 
     return tof
@@ -31,7 +29,7 @@ def newton_lambert_solver(a0, s, c, tof):
 
     a1 = a0 - f_a0/f_d_a0
 
-    return a1
+    return a1, alph, beta
 
 def main():
 
@@ -49,7 +47,7 @@ def main():
     diff = abs(a1-a0)
     while diff > 1e-6:
         # a0 = a1
-        a1 = newton_lambert_solver(a0, s, c, tof_TU)
+        a1, alp, beta = newton_lambert_solver(a0, s, c, tof_TU)
         new_tof = lamberts_equation(a1, s, c)
 
         print(f"a: {a1}, TU: {new_tof}, diff = {abs(a1-a0)}, diff to fsolve result: {abs(a1-1.2321040153545382)}")
