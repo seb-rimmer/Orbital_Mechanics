@@ -31,7 +31,7 @@ def angle_between_vectors(r1, r2):
 def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
-    
+    print(a)
     a2 = 2*asin(sqrt(s/(2*a)))
     b2 = 2*asin(sqrt((s-c)/(2*a)))
 
@@ -42,7 +42,7 @@ def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 def lamberts_time_equation_solver_upper_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
-    
+    print(a)
     a2 = 2*pi - 2*asin(sqrt(s/(2*a)))
     b2 = 2*asin(sqrt((s-c)/(2*a)))
 
@@ -86,6 +86,34 @@ def newton_lambert_solver(a0, s, c, tof, branch, biggerThetaTransfer):
     a1 = a0 - f_a0/f_d_a0
 
     return a1, alph, beta
+
+def newton_bisection_solver(a0, s, c, tof_target):
+
+    # Use Newton's method to return a value for variable a to within precision
+    # specified by delta, for the function tof = f(a)
+
+    # upper limit of a assumed to be 4*a0
+    upper_lim = 5*a0
+    lower_lim = a0
+    new_tof = 0
+    iter = 0
+
+    while abs(tof_target - new_tof) > 1e-8:
+        
+        guess = (upper_lim + lower_lim) / 2
+        new_tof = lamberts_equation(guess, s, c)
+
+        if new_tof < tof_target:
+            upper_lim = guess
+        elif new_tof > tof_target:
+            lower_lim = guess
+
+        print(guess, new_tof)
+        iter += 1
+        if iter > 200:
+            break
+
+    return guess
 
 def main():
 
@@ -132,10 +160,10 @@ def main():
     
     elif example == 'm':
         # Mars
-        theta_d = 175
+        theta_d = 75
         r0 = 1
         rf = 1.524
-        tf_days = 200
+        tf_days = 210
 
     # Angle between vectors
     theta = theta_d * pi/180
@@ -186,7 +214,7 @@ def main():
     # Step 4 - Compute the transfer time corresponding to the minimum semimajor axis transfer ellipse
     tm = sqrt(a_m**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
 
-    print(f"Minimum energy ellipse sma = {a_m}, corresponding tof: {tm}")
+    print(f"Minimum energy ellipse sma = {a_m}, corresponding tof: {tm:3.2f}, or  {tm*365.25/(2*pi):3.2f} days")
 
     # Do sweep and plot for semimajor axis vs tof
     # a_m = a_m * 1.1
@@ -198,16 +226,16 @@ def main():
 
     # Sweep bottom half
     for a in a_sweep:
-        alpha0 = 2 * asin( sqrt(  (s)   / (2*a) ) ) 
-        beta0  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
-        tm_i = sqrt(a**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
+        alpha0_sweep = 2 * asin( sqrt(  (s)   / (2*a) ) ) 
+        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
         t_fx_bottom = np.append(t_fx_bottom, tm_i)
 
     # Sweep top half
     for a in a_sweep:
-        alpha0 = 2*pi -  2 * asin( sqrt(  (s)   / (2*a) ) ) 
-        beta0  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
-        tm_i = sqrt(a**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
+        alpha0_sweep = 2*pi -  2 * asin( sqrt(  (s)   / (2*a) ) ) 
+        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
         t_fx_top = np.append(t_fx_top, tm_i)
 
     # convert time to years
@@ -250,60 +278,85 @@ def main():
     if branch:
         alpha = alpha0
     else:
-        alpha = 2*pi - alpha0
+        alpha = 2*pi - 2 * asin( sqrt(  (s)   / (2*a_m) ) ) 
 
     # Step 6 - Numerically solve lambert's time equation for semimajor axis
-    #
-    # legacy fsolve replaced with newton's method
-    # x0 = [a_m*1.2, alpha0, beta0]
+    
+    # Generate guess for a0
+    a0 = a_m*1.1
+    # a0 = 4.5
+
+    # METHOD 1 - fsolve with python
+    # -------------------------------
+    # x0 = [a0, alpha0, beta0]
     # if tf > tm:
     #     solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
     # else:
     #     solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
-    a0 = a_m*1.00001
-    a1 = 10*a0
-    diff = abs(a1-a0)
-    print(a0, s/(a0*2), s, c)
-    while diff > 1e-6:
-        
-        # a0 = a1
-        a1, alpha, beta = newton_lambert_solver(a0, s, c, tf, branch, biggerThetaTransfer)
-        print(a1, s/(a1*2), s, c, alpha, beta)
+    # diff =1
 
-        new_tf = lamberts_equation(a1, s, c)
+    # METHOD 2 - our own newton's iteration method
+    # -------------------------------
+    # a1 = 10*a0
+    # diff = abs(a1-a0)
+    # print(a0, s/(a0*2), s, c)
+    # while diff > 1e-6:
         
-        # print(f"a: {a1}, TU: {new_tof}, diff = {abs(a1-a0)}, diff to fsolve result: {abs(a1-1.2321040153545382)}")
-        
-        diff = abs(a1-a0)
-        
-        a0=a1
+    #     # a0 = a1
+    #     a1, alpha, beta = newton_lambert_solver(a0, s, c, tf, branch, biggerThetaTransfer)
+    #     print(a1, s/(a1*2), s, c, alpha, beta)
 
-    a = a1
-    # print(f'Solution: x = {[a1, alpha, beta]}')
+    #     new_tf = lamberts_equation(a1, s, c)
+        
+    #     print(f"a: {a1}, TU: {new_tf}, diff = {abs(a1-a0)}") # diff to fsolve result: {abs(a1-1.2321040153545382)}")
+        
+    #     diff = abs(a1-a0)
 
-    # Step 7 - Compute terminal velocity vectors v1 and v2
+    #     # break out of loop if difference becomes too large - usually means skipped over solution
+    #     if abs(a1 - a_m) > 10*a_m:
+    #         diff = 0
+        
+    #     a0=a1
+
+    # METHOD 3 - bisection algorithm
+    # -------------------------------
+    a = newton_bisection_solver(a0, s, c, tf)
+    alpha = 2*pi - 2 * asin( sqrt(  (s)   / (2*a) ) ) 
+    beta  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+    diff = 1
     
-    # Work out A and B constants for velocity vectors
-    A = sqrt(1/(4*a)) * 1/tan(alpha/2)
-    B = sqrt(1/(4*a)) * 1/tan(beta/2)
+    if diff is not 0:
+        # a = a0
+        # a, alpha, beta = [i for i in solutions]
+        # print(f'Solution: x = {[a, alpha, beta]}')
 
-    v1 = (B+A) * u_c + (B-A) * u_1      # departure velocity vector
-    v2 = (B+A) * u_c - (B-A) * u_2      # arrival velocity vector
+        # Step 7 - Compute terminal velocity vectors v1 and v2
+        
+        # Work out A and B constants for velocity vectors
+        A = sqrt(1/(4*a)) * 1/tan(alpha/2)
+        B = sqrt(1/(4*a)) * 1/tan(beta/2)
 
-    # Step 8 - Compute total dV for transfer
-    dv1 = np.linalg.norm(v1 - v_dep)
-    dv2 = np.linalg.norm(v_arr - v2)
+        v1 = (B+A) * u_c + (B-A) * u_1      # departure velocity vector
+        v2 = (B+A) * u_c - (B-A) * u_2      # arrival velocity vector
+
+        # Step 8 - Compute total dV for transfer
+        dv1 = np.linalg.norm(v1 - v_dep)
+        dv2 = np.linalg.norm(v_arr - v2)
+        
+        print(f"Departure dV = {dv1} DU/TU  /  dV = {dv1 * DU/TU} km/s")
+        print(f"Arrival dV   = {dv2} DU/TU  /  dV = {dv2 * DU/TU} km/s")
+        print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
+
+        # Step 9 - Plot trajectories, start points and end points
+
+        # calculate eccentricity for transfer orbit (from Eq 5.40 in prussing)
+        p = sin((alpha+beta)/2)**2 * (4*a *(s - r1)*(s - r2)) / (c**2)
+        e = sqrt(1 - p/a) 
+        plot_transfer(rf, a, theta)
     
-    print(f"Departure dV = {dv1} DU/TU  /  dV = {dv1 * DU/TU} km/s")
-    print(f"Arrival dV   = {dv2} DU/TU  /  dV = {dv2 * DU/TU} km/s")
-    print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
+    else:
+        print("Final values are below; solver could not find solution (step size too big maybe)")
 
-    # Step 9 - Plot trajectories, start points and end points
-
-    # calculate eccentricity for transfer orbit (from Eq 5.40 in prussing)
-    p = sin((alpha+beta)/2)**2 * (4*a *(s - r1)*(s - r2)) / (c**2)
-    e = sqrt(1 - p/a) 
-    plot_transfer(rf, a, theta)
 
 if __name__ == '__main__':
     main()
