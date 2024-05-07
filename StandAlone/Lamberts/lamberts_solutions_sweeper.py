@@ -50,11 +50,18 @@ def lamberts_time_equation_solver_upper_branch(vars, tf, s, c):
             beta - b2,
             tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
 
-def lamberts_equation(a, s, c):
+def lamberts_equation(a, s, c,  branch, biggerThetaTransfer):
 
-    alph = 2*pi - 2*asin(sqrt(s/(2*a)))
+    alpha = 2*asin(sqrt(s/(2*a)))
     beta = 2*asin(sqrt((s-c)/(2*a)))
-    tof = a**(3/2) * (alph - beta - (sin(alph)-sin(beta)))
+
+    if not branch:
+        alpha = 2*pi - alpha
+
+    if biggerThetaTransfer:
+        beta = -2*asin(sqrt((s-c)/(2*a)))
+
+    tof = a**(3/2) * (alpha - beta - (sin(alpha)-sin(beta)))
 
     return tof
 
@@ -87,7 +94,7 @@ def newton_lambert_solver(a0, s, c, tof, branch, biggerThetaTransfer):
 
     return a1, alph, beta
 
-def newton_bisection_solver(a0, s, c, tof_target):
+def newton_bisection_solver(a0, s, c, tof_target, branch, biggerThetaTransfer):
 
     # Use Newton's method to return a value for variable a to within precision
     # specified by delta, for the function tof = f(a)
@@ -101,19 +108,56 @@ def newton_bisection_solver(a0, s, c, tof_target):
     while abs(tof_target - new_tof) > 1e-8:
         
         guess = (upper_lim + lower_lim) / 2
-        new_tof = lamberts_equation(guess, s, c)
+        new_tof = lamberts_equation(guess, s, c, branch, biggerThetaTransfer)
 
         if new_tof < tof_target:
             upper_lim = guess
         elif new_tof > tof_target:
             lower_lim = guess
 
-        print(guess, new_tof)
+        # print(guess, new_tof)
         iter += 1
         if iter > 200:
             break
 
     return guess
+
+def lamberts_dv(r1, r2, theta, transfer_a):
+
+    # Starting vector
+    r0 = np.array([r1, 0])
+    v_dep = np.array([0, 1])
+
+    # Final vector
+    rf = np.array([r2*cos(theta), r2*sin(theta)])
+    u_2 = cos(theta)
+    v_arr = np.sqrt(1/np.linalg.norm(rf)) * np.array([-sin(theta), cos(theta)])
+
+    # Unit vectors
+    u_1 = r0 / np.linalg.norm(r0)
+    u_2 = rf / np.linalg.norm(rf)
+    
+    # chord
+    c = sqrt(r1**2 + r2**2 - 2*r1*r2*cos(theta))
+    u_c = (rf - r0) / c
+
+    # spacetrianlge semiperimeter
+    s = (r1 + r2 + c) / 2
+
+    alpha = 2 * asin( sqrt(  (s)   / (2*transfer_a) ) ) 
+    beta  = 2 * asin( sqrt(  (s-c) / (2*transfer_a) ) )
+
+    A = sqrt(1/(4*transfer_a)) * 1/tan(alpha/2)
+    B = sqrt(1/(4*transfer_a)) * 1/tan(beta/2)
+
+    v1 = (B+A) * u_c + (B-A) * u_1      # departure velocity vector
+    v2 = (B+A) * u_c - (B-A) * u_2      # arrival velocity vector
+
+    # Step 8 - Compute total dV for transfer
+    dv1 = np.linalg.norm(v1 - v_dep)
+    dv2 = np.linalg.norm(v_arr - v2)
+
+    return dv1, dv2
 
 def main():
 
@@ -143,7 +187,7 @@ def main():
 
     # Some examples to test
     # example var can be j, v, or m
-    example = 'm'    
+    example = 'j'    
     if example == 'j':
         # Jupiter
         theta_d = 147
@@ -170,16 +214,9 @@ def main():
 
     # Starting vector
     r0 = np.array([r0, 0])
-    v_dep = np.array([0, 1])
 
     # Final vector
     rf = np.array([-rf*cos(pi - theta), rf*sin(pi-theta)])
-    u_2 = cos(theta)
-    v_arr = np.sqrt(1/np.linalg.norm(rf)) * np.array([-sin(theta), cos(theta)])
-
-    # Unit vectors
-    u_1 = r0 / np.linalg.norm(r0)
-    u_2 = rf / np.linalg.norm(rf)
 
     # Time of flight converted to TU
     tf = (tf_days/365.25) * 2 * pi
@@ -248,13 +285,16 @@ def main():
     plt.plot(a_sweep, t_fx_top)    
 
     # plot additional data for tm, am etc
-    plt.plot([a_m, a_m], [0, tm], 'r--', label='Minimum energy sma')
-    plt.plot([0, a_m], [tm, tm], 'r--', label='ToF corresponding to minimum energy sma')
 
-    plt.plot([0, 2], [tf, tf], 'r--', label='Chosen ToF')
+    x_lim = [a_m*0.9, a_sweep[-1]*1.5]
+    y_lim = [0, t_fx_top[-1]]
+    
+    plt.plot([a_m, a_m], [0, tm], 'r--', label=f'Minimum energy SmA: {a_m:.2f} AU')
+    plt.plot([0, a_m], [tm, tm], 'r--', label=f'Minimum energy SmA ToF: {tm:.2f} TU')
+    plt.plot([0, x_lim[1]], [tf, tf], 'g--', label=f'Chosen ToF: {tf:.2f}TU')
 
-    ax.set_xlim(a_m*0.9,a_m* 1.5)
-    ax.set_ylim(0, 12)
+    ax.set_xlim(x_lim[0], x_lim[1])
+    ax.set_ylim(y_lim[0], y_lim[1])
 
     # Optional: Add labels and title
     plt.xlabel('Semi-major axis (AU)')
@@ -267,7 +307,7 @@ def main():
     # plt.show()
 
     # Step 5 - Determine initial values of alpha and beta
-    biggerThetaTransfer = (theta <= pi)
+    biggerThetaTransfer = (theta >= pi)
     if not biggerThetaTransfer:
         beta = beta0
     else:
@@ -320,9 +360,18 @@ def main():
 
     # METHOD 3 - bisection algorithm
     # -------------------------------
-    a = newton_bisection_solver(a0, s, c, tf)
-    alpha = 2*pi - 2 * asin( sqrt(  (s)   / (2*a) ) ) 
-    beta  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+    a = newton_bisection_solver(a0, s, c, tf, branch, biggerThetaTransfer)
+    
+    # Final alpha and beta values corresponding to calculated sma
+    alpha = 2*asin(sqrt(s/(2*a)))
+    beta = 2*asin(sqrt((s-c)/(2*a)))
+
+    if not branch:
+        alpha = 2*pi - alpha
+
+    if biggerThetaTransfer:
+        beta = -2*asin(sqrt((s-c)/(2*a)))
+    
     diff = 1
     
     if diff is not 0:
@@ -333,15 +382,8 @@ def main():
         # Step 7 - Compute terminal velocity vectors v1 and v2
         
         # Work out A and B constants for velocity vectors
-        A = sqrt(1/(4*a)) * 1/tan(alpha/2)
-        B = sqrt(1/(4*a)) * 1/tan(beta/2)
 
-        v1 = (B+A) * u_c + (B-A) * u_1      # departure velocity vector
-        v2 = (B+A) * u_c - (B-A) * u_2      # arrival velocity vector
-
-        # Step 8 - Compute total dV for transfer
-        dv1 = np.linalg.norm(v1 - v_dep)
-        dv2 = np.linalg.norm(v_arr - v2)
+        dv1, dv2 = lamberts_dv(r1, r2, theta, a)
         
         print(f"Departure dV = {dv1} DU/TU  /  dV = {dv1 * DU/TU} km/s")
         print(f"Arrival dV   = {dv2} DU/TU  /  dV = {dv2 * DU/TU} km/s")
