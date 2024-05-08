@@ -56,16 +56,14 @@ plot([0 p2(1)], [0 p2(2)], 'k')
 plot([1 1+p_12(1)], [0 p_12(2)]);
 
 % Line from r1 to vacant focii
-% plot([1 p1_fvac_origin(1)], [0 p1_fvac_origin(2)], 'LineWidth', 2);
+plot([1 p1_fvac_origin(1)], [0 p1_fvac_origin(2)], 'LineWidth', 2);
 
 % Plot transfer ellipse
-% plot(x_y(1,:), x_y(2,:));
-% scatter(actual_center(1), actual_center(2))
+plot(x_y(1,:), x_y(2,:));
+scatter(actual_center(1), actual_center(2))
 
 % Plot focii
-% scatter(0, 0, '*', 'r') % F
-% scatter(p1_fvac_origin(1), p1_fvac_origin(2), '*', 'r') % F*
-
-% plot hyperbola for position of vacant focii 
+scatter(0, 0, '*', 'r') % F
+scatter(p1_fvac_origin(1), p1_fvac_origin(2), '*', 'r') % F*
 
 axis equal
