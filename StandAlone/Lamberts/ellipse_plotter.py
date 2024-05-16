@@ -1,7 +1,14 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from math import cos, sin, pi, sqrt, ceil, atan
+from math import cos, sin, pi, sqrt, ceil, atan2
 import numpy as np
+from scipy.optimize import fsolve
+
+def focci_solver(p, *data):
+    p1, r1, p2, r2, a = data
+    x, y = p
+
+    return ((x - p1[0])**2 + (y - p1[1])**2 - (2*a - r1)**2, (x - p2[0])**2 + (y - p2[1])**2 - (2*a - r2)**2)
 
 def plot_transfer(r2, sma, theta):
 
@@ -40,23 +47,66 @@ def plot_transfer(r2, sma, theta):
     target_orbit = patches.Circle(center, r2, fill=False, color='k', linestyle='--')
     target = patches.Circle(target_pos, 0.1, fill=True, color='orange')
 
-    ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
-    ax.plot(x_traj, y_traj, color='blue')
+    # ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
+    # ax.plot(x_traj, y_traj, color='blue')
+
+    # solve ellipses equations for the solutions of 2 possible focci
+    p1 = (1, 0)
+    p2 = (r2*cos(theta), r2*sin(theta))
+    data = (p1, 1, p2, r2, sma)
+    f1 = fsolve(focci_solver, (1, 1), args=data)
+    f2 = fsolve(focci_solver, (-1, -1), args=data)
+
+    # Calculating points for both possible transfer ellipses. 1 parameters, 2 points, 3 rotate
+    e1 = np.linalg.norm(f1)/(2*sma)
+    tilt_ellipse1 = atan2(f1[1], f1[0])
+    b1 = sma * sqrt(1 - e1**2)
+
+    e2 = np.linalg.norm(f2)/(2*sma)
+    tilt_ellipse2 = atan2(f2[1], f2[0])
+    b2 = sma * sqrt(1 - e2**2)
+
+    # Transfer ellipse 1 parameters
+    actual_center1 = np.array(f1/2)
+    angle1 = tilt_ellipse1
+    theta1 = np.linspace(0, 2*pi, 10000)  # angle from 0 to 2*p
+    x1, y1 = np.array([sma * cos(theta) for theta in theta1]), np.array([b1 * sin(theta) for theta in theta1])
+
+    R = np.array([[cos(angle1), -sin(angle1)], [sin(angle1), cos(angle1)]])
+    x1, y1 = np.matmul(R, np.array([x1, y1]))
+    x1, y1 =  x1 + actual_center1[0], y1 + actual_center1[1]
+
+    # Transfer ellipse 2 parameters
+    actual_center2 = np.array(f2/2)
+    angle2 = tilt_ellipse2
+    theta2 = np.linspace(0, 2*pi, 10000)  # angle from 0 to 2*p
+    x2, y2 = np.array([sma * cos(theta) for theta in theta2]), np.array([b2 * sin(theta) for theta in theta2])
+
+    R = np.array([[cos(angle2), -sin(angle2)], [sin(angle2), cos(angle2)]])
+    x2, y2 = np.matmul(R, np.array([x2, y2]))
+    x2, y2 =  x2 + actual_center2[0], y2 + actual_center2[1]
 
     # centre and focci positioning
-    ax.plot(ellipse_centre[0], ellipse_centre[1],  marker='*')
-    ax.plot(ellipse_centre[0]+sma*e, ellipse_centre[1],  marker='*', color='red')
+    # ax.plot(ellipse_centre[0], ellipse_centre[1],  marker='*')
+    ax.plot(f1[0],f1[1],  marker='*', color='red')
+    ax.plot(f2[0],f2[1],  marker='*', color='red')
 
     # Plot vectors
     ax.plot([0, cos(theta)*r2], [0, sin(theta)*r2], label='My Line', color='red', linestyle='-', marker='')
     ax.plot([0, 1], [0, 0], label='My Line', color='red', linestyle='-', marker='')
 
     # Add the ellipse to the axis
-    ax.add_patch(ellipse)
+    ax.plot(x1, y1, color='blue', linestyle='--', marker='')
+    ax.plot(x2, y2, color='blue', linestyle='--', marker='')
     ax.add_patch(earth_orbit)
     # ax.add_patch(earth)
     ax.add_patch(target_orbit)
     # ax.add_patch(target)
+
+    # Add actual trajectory (index index points of transfer ellipses)
+    end_point = np.abs(theta1 - theta).argmin()
+    print(end_point)
+    ax.plot(x2[0:end_point], y2[0:end_point], color='red', linestyle='-', marker='')
 
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
