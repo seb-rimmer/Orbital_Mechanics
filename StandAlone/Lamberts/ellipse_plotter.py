@@ -66,6 +66,12 @@ def plot_transfer(r2, sma, theta):
     tilt_ellipse2 = atan2(f2[1], f2[0])
     b2 = sma * sqrt(1 - e2**2)
 
+    # Make both angles positive
+    if tilt_ellipse1 < 0:
+        tilt_ellipse1 += 2*pi   
+    if tilt_ellipse2 < 0:
+        tilt_ellipse2 += 2*pi
+
     # Transfer ellipse 1 parameters
     actual_center1 = np.array(f1/2)
     angle1 = tilt_ellipse1
@@ -104,9 +110,21 @@ def plot_transfer(r2, sma, theta):
     # ax.add_patch(target)
 
     # Add actual trajectory (index index points of transfer ellipses)
-    end_point = np.abs(theta1 - theta).argmin()
-    print(end_point)
-    ax.plot(x2[0:end_point], y2[0:end_point], color='red', linestyle='-', marker='')
+    # Will never use the prograde option, so select and choose between prograde options
+    # Solution is a bit of a hack, probably a more elegant solution
+    
+    # euclidean distances for start with first ellipse
+    argp1 = np.argmin(np.sqrt((x1 - 1)**2 + (y1 - 0)**2))
+    argp2 = np.argmin(np.sqrt((x1 - cos(theta)*r2)**2 + (y1 - sin(theta)*r2)**2))
+    traj_ellipse = [x1, y1]
+
+    if y1[argp1] < 0:
+        argp1 = np.argmin(np.sqrt((x2 - 1)**2 + (y2 - 0)**2))
+        argp2 = np.argmin(np.sqrt((x2 - cos(theta)*r2)**2 + (y2 - sin(theta)*r2)**2))
+        traj_ellipse = [x2, y2]
+
+    start, stop = min(argp1, argp2), max(argp1, argp2)
+    ax.plot(traj_ellipse[0][start:stop], traj_ellipse[1][start:stop], color='red', linestyle='-', marker='')
 
     # Set the aspect ratio of the plot to be equal
     ax.set_aspect('equal')
