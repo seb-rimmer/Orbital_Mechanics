@@ -15,29 +15,25 @@ from math import sqrt , atan2, pi, sin, cos, tan
 
 import functions
 
-def plot_vectors(bodies:list, canonical):
-
-    if canonical:
-        divider = 149597871
-        radius = 149597871/10
-    else:
-        divider = 1
-        radius = 0.05
+def plot_vectors(bodies:list):
 
     #  Create a figure and axis
     fig, ax = plt.subplots()
     
-    center = (0, 0)
+    # Add the Sun
+    target = patches.Circle([0, 0],  
+                            2e7, 
+                            fill=True, 
+                            color=(0.8, 0.8, 0),
+                            label='Sun')
+
+    ax.add_patch(target)
+    
 
     for data in bodies:
-
-        # Plot things as an ellipse, so need to calculate semi-minor axis:
-        e = np.linalg.norm(data['e'])
-        a = data['a'] / divider
-        b = sqrt( a**2 - (e*a)**2 )
-
-        x = float(data['X']) / divider
-        y = float(data['Y']) / divider
+  
+        x = float(data['X'])
+        y = float(data['Y'])
 
         r_vect = np.array([x, y])
         r_mag = np.linalg.norm(r_vect)
@@ -51,7 +47,7 @@ def plot_vectors(bodies:list, canonical):
                                                                   data['low_ohm'], 
                                                                   pos) for pos in f])
         
-        x, y = [pos[0]/divider for pos in r_vectors_check], [pos[1]/divider for pos in r_vectors_check]
+        x, y = [pos[0] for pos in r_vectors_check], [pos[1] for pos in r_vectors_check]
 
         target = patches.Circle(r_vect, 
                                 1e7, 
@@ -98,7 +94,8 @@ def main():
 
     now = '2019-Oct-26 00:00:00'
 
-    bodies = [3, 4, 20065803 ]
+    bodies = [3, 4, 20065803]
+    colors = ['blue', 'orange', 'grey']
     body_positions = []
 
     for body in bodies:
@@ -122,7 +119,7 @@ def main():
         # print(f"{body_dict['VY']}")
         # print(f"{body_dict['VZ']}")
 
-    plot_vectors(body_positions, canonical=False)
+    plot_vectors(body_positions)
 
 
 if __name__ == '__main__':

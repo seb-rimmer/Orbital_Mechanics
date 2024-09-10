@@ -353,7 +353,8 @@ def radial_vect_from_orbital_elems(a, e, inc, cap_ohm, low_ohm, f):
 
     i, j, k = np.array([1, 0, 0]), np.array([0, 1, 0]), np.array([0, 0, 1])
 
-    # work out radial distance using standard eclipse formula
+    # work out radial distance using standard ellipse formula
+    e = np.linalg.norm(e)
     r = (a * (1 - e**2) ) / \
         ( 1 + e*cos(f * pi/180))
 
@@ -580,7 +581,7 @@ def create_json_obj(data:list):
         v = np.array([new_dict_obj['VX'], new_dict_obj['VY'], new_dict_obj['VZ']])
 
         new_dict_obj['a'] = a_from_vectors(r, v, mu)
-        new_dict_obj['e'] = np.linalg.norm(eccentricity_from_vectors(r, v, mu))
+        new_dict_obj['e'] = eccentricity_from_vectors(r, v, mu)[1]
         new_dict_obj['i'] = inclination(r, v)
         new_dict_obj['cap_ohm'] = ra_o_an(r, v)
         new_dict_obj['low_ohm'] = arg_of_periapse(r, v, mu)
@@ -595,7 +596,7 @@ def jpl_body_request(body_code, time='2000-Jan-01 00:00:00'):
     api_url = 'https://ssd.jpl.nasa.gov/api/horizons.api'
     api_url += "?format=json&EPHEM_TYPE=VECTORS&OBJ_DATA=NO"
     api_url += f"&COMMAND='{body_code}'"
-    api_url += f"&CENTER='*@sun'"
+    api_url += f"&CENTER='500@0'"
     api_url += f"&TLIST='{time}'"
 
     # Help query:
@@ -610,7 +611,7 @@ def jpl_body_request(body_code, time='2000-Jan-01 00:00:00'):
             data = response.json()  # Assuming the response is in JSON format
 
             with open('request_output.json', "w") as json_file:
-                json.dump(data, json_file)
+                json.dump(data, json_file, indent=4)
             
             # extract name of target body
             name_start = data['result'].find('Target body name:')
