@@ -606,29 +606,36 @@ def jpl_body_request(body_code, time='2000-Jan-01 00:00:00'):
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
-
+                       
             # The response content will contain the data returned by the API
             data = response.json()  # Assuming the response is in JSON format
 
             with open('request_output.json', "w") as json_file:
                 json.dump(data, json_file, indent=4)
+
+            # Check if actually have emphemeris data returned:
+            if "error" in data:
+                print(f"Error in emphemerides request: {data['error']}")
+                return 0
             
-            # extract name of target body
-            name_start = data['result'].find('Target body name:')
-            target_name = data['result'][name_start+18:name_start+49].rstrip()
+            else:
+                # extract name of target body
+                name_start = data['result'].find('Target body name:')
+                target_name = data['result'][name_start+18:name_start+49].rstrip()
 
-            elements_start = data['result'].find('$$SOE')
-            elements_end = data['result'].find('$$EOE')
+                elements_start = data['result'].find('$$SOE')
+                elements_end = data['result'].find('$$EOE')
 
-            data['result'] = data['result'][elements_start+6:elements_end]
-            data['result'] = data['result'].split('\n')
+                data['result'] = data['result'][elements_start+6:elements_end]
+                data['result'] = data['result'].split('\n')
 
-            vector_set = [data['result']]
-            body_dict = create_json_obj(vector_set)
-            body_dict['Name'] = target_name
+                vector_set = [data['result']]
+                body_dict = create_json_obj(vector_set)
+                body_dict['Name'] = target_name
 
         else:
             print(f"Request failed with status code: {response.status_code}")
+            return 0
 
     except requests.exceptions.RequestException as e:
         print(f"Request exception: {e}")

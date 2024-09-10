@@ -62,20 +62,8 @@ def plot_vectors(bodies:list):
     ax.set_aspect('equal')
 
     # Set the axis limits to show the entire ellipse
-    lim = r_mag
-    ax.set_xlim(-lim, lim)
-    ax.set_ylim(-lim, lim)
+    plt.autoscale()
     ax.legend()
-
-    # Add earth periphelion
-    # r = bodies[0]['a'] * ( 1 - bodies[0]['e'])
-    # theta = bodies[0]['low_ohm'] + bodies[0]['cap_ohm']
-    # ax.plot([0, r * cos(theta * pi/180)], [0, r*sin(theta * pi/180)])
-
-    # Add didymos aphelion
-    # r = bodies[2]['a'] * ( 1 + bodies[2]['e'])
-    # theta = bodies[2]['low_ohm'] + bodies[2]['cap_ohm'] + 180
-    # ax.plot([0, r * cos(theta * pi/180)], [0, r*sin(theta * pi/180)])
 
     # Optional: Add labels and title
     plt.xlabel('X-axis')
@@ -91,8 +79,8 @@ def plot_vectors(bodies:list):
 
 def main():
 
-
-    now = '2019-Oct-26 00:00:00'
+    launch =  '2024-Oct-12 00:00:00'
+    arrival = '2026-Dec-01 00:00:00'
 
     bodies = [3, 4, 20065803]
     colors = ['blue', 'orange', 'grey']
@@ -100,24 +88,15 @@ def main():
 
     for body in bodies:
         
-        body_dict = functions.jpl_body_request(body, now)
+        # Add body at launch
+        body_dict = functions.jpl_body_request(body, launch)
+        if body_dict != 0:
+            body_positions += [body_dict]
 
-        body_positions += [body_dict]
-
-        # Vector checks
-        r_mag = sqrt(body_dict['X']**2 + body_dict['Y']**2)
-        r_ellipse = (body_dict['a'] * (1 - body_dict['e']**2) ) / \
-                    ( 1 + body_dict['e']*cos(body_dict['f'] * pi/180))
-        
-        theta = atan2(body_dict['Y'], body_dict['X']) * 180/pi
-        
-        # print(f"Body: {body_dict['Name']}")
-        # print(f"{body_dict['X']}")
-        # print(f"{body_dict['Y']}")
-        # print(f"{body_dict['Z']}")
-        # print(f"{body_dict['VX']}")
-        # print(f"{body_dict['VY']}")
-        # print(f"{body_dict['VZ']}")
+        # Add body at arrival
+        # body_dict = functions.jpl_body_request(body, arrival)
+        # if body_dict != 0:
+        #     body_positions += [body_dict]
 
     plot_vectors(body_positions)
 
