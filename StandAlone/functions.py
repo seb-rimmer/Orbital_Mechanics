@@ -7,7 +7,9 @@ from math import acos, pi, cos, sin, sqrt
 from math import acos, pi, cos, sin, atan2
 import requests
 import json
-
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import random
 
 def v_vis_viva(r_t: float,
                a: float,
@@ -341,7 +343,7 @@ def orbital_elems_from_vectors(r, v, mu):
     elems_dict = {}
 
     elems_dict['a'] = a_from_vectors(r, v, mu)
-    elems_dict['e'] = np.linalg.norm(eccentricity_from_vectors(r, v, mu))
+    elems_dict['e'] = eccentricity_from_vectors(r, v, mu)[1]
     elems_dict['i'] = inclination(r, v)
     elems_dict['cap_ohm'] = ra_o_an(r, v)
     elems_dict['low_ohm'] = arg_of_periapse(r, v, mu)
@@ -642,20 +644,90 @@ def jpl_body_request(body_code, time='2000-Jan-01 00:00:00'):
 
     return body_dict
 
+def plot_vectors(bodies:list):
+
+    #  Create a figure and axis
+    fig, ax = plt.subplots()
+    
+    # Add the Sun
+    target = patches.Circle([0, 0],  
+                            2e7, 
+                            fill=True, 
+                            color=(0.8, 0.8, 0),
+                            label='Sun')
+
+    ax.add_patch(target)
+    
+
+    for data in bodies:
+  
+        x = float(data['X'])
+        y = float(data['Y'])
+
+        r_vect = np.array([x, y])
+        r_mag = np.linalg.norm(r_vect)
+        
+        # Plot target orbit
+        f = np.linspace(0, 360, 360)
+        r_vectors_check = np.array([radial_vect_from_orbital_elems(data['a'], 
+                                                                  data['e'], 
+                                                                  data['i'], 
+                                                                  data['cap_ohm'], 
+                                                                  data['low_ohm'], 
+                                                                  pos) for pos in f])
+        
+        x, y = [pos[0] for pos in r_vectors_check], [pos[1] for pos in r_vectors_check]
+
+        target = patches.Circle(r_vect, 
+                                1e7, 
+                                fill=True, 
+                                color=(random.random(), random.random(), random.random()),
+                                label=f"{data['name']}, {data['Time']}")
+
+        ax.add_patch(target)
+        ax.plot(x, y, color='k', linestyle='--', linewidth=0.5)
+
+    # Set the aspect ratio of the plot to be equal
+    ax.set_aspect('equal')
+
+    # Set the axis limits to show the entire ellipse
+    plt.autoscale()
+    ax.legend()
+
+    # Optional: Add labels and title
+    plt.xlabel('X-axis')
+    plt.ylabel('Y-axis')
+    plt.title('Plotting Solar Orbits at time: ')
+
+    # Show the plot
+    plt.grid()
+    plt.show()
+
+    return 0
+
+
 def main():
 
     mu = float(1.32712440018E+11)
-    r = np.array([1.269335017088585E+08, 7.759541255851591E+07, -5.128282554760575E+03])
-    v = np.array([-1.602222110677506E+01, 2.530395196294028E+01, -1.292576889628805E-03])
+    r0 = np.array([160077584.6301427, -51942023.9865322, -10038863.59733499])
+    v0 = np.array([2.582958403490801, 32.05362233994889, 0.4121945888753515])
 
-    elems = orbital_elems_from_vectors(r, v, mu)
+    # elems = orbital_elems_from_vectors(r, v, mu)
 
-    # print(elems)
+    # # print(elems)
 
-    r_vector_check = radial_vect_from_orbital_elems(elems['a'], elems['e'], elems['i'], elems['cap_ohm'], elems['low_ohm'], elems['f'])
-    # print(r_vector_check)
+    # r_vector_check = radial_vect_from_orbital_elems(elems['a'], elems['e'], elems['i'], elems['cap_ohm'], elems['low_ohm'], elems['f'])
+    # # print(r_vector_check)
 
-    print(v_vis_viva(1.515e+8, 2.457e+8, mu))
+    # print(v_vis_viva(1.515e+8, 2.457e+8, mu))
+
+    rf, vf = r_and_v_as_function_of_t(mu, r0, v0, 3600*780)
+    print(rf, vf)
+    
+    elems_f = orbital_elems_from_vectors(rf, vf, mu)
+
+    for key, value in elems_f.items():
+        print(f"{key}: {value}")
 
     pass
 
