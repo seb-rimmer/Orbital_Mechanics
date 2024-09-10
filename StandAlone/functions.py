@@ -5,6 +5,9 @@
 import numpy as np
 from math import acos, pi, cos, sin, sqrt
 from math import acos, pi, cos, sin, atan2
+import requests
+import json
+
 
 def v_vis_viva(r_t: float,
                a: float,
@@ -538,6 +541,98 @@ def r_and_v_as_function_of_t(mu, r0_vector, v0_vector, dt):
     v_t1 = F_dot * r0_vector + G_dot * v0_vector
 
     return r_t1, v_t1
+
+def create_json_obj(data:list):
+
+    mu = float(1.32712440018E+11)
+
+    for object in data:
+
+        # print(object)
+
+        new_dict_obj = {}
+        
+        # create time
+        new_dict_obj['time'] = object[0]
+
+        # create X, Y, Z
+        x_index = object[1].find('X =')+3
+        new_dict_obj['X']  = float(object[1][x_index:x_index+22])
+        
+        y_index = object[1].find('Y =')+3
+        new_dict_obj['Y']  = float(object[1][y_index:y_index+22])
+        
+        z_index = object[1].find('Z =')+3
+        new_dict_obj['Z']  = float(object[1][z_index:z_index+22])
+        
+        # create VX, VY, VZ
+        x_index = object[2].find('VX')+3
+        new_dict_obj['VX']  = float(object[2][x_index:x_index+22])
+        
+        y_index = object[2].find('VY')+3
+        new_dict_obj['VY']  = float(object[2][y_index:y_index+22])
+        
+        z_index = object[2].find('VZ')+3
+        new_dict_obj['VZ']  = float(object[2][z_index:z_index+22])
+
+        # create orbital elements around the sun
+        r = np.array([new_dict_obj['X'], new_dict_obj['Y'], new_dict_obj['Z']])
+        v = np.array([new_dict_obj['VX'], new_dict_obj['VY'], new_dict_obj['VZ']])
+
+        new_dict_obj['a'] = a_from_vectors(r, v, mu)
+        new_dict_obj['e'] = np.linalg.norm(eccentricity_from_vectors(r, v, mu))
+        new_dict_obj['i'] = inclination(r, v)
+        new_dict_obj['cap_ohm'] = ra_o_an(r, v)
+        new_dict_obj['low_ohm'] = arg_of_periapse(r, v, mu)
+        new_dict_obj['f'] = true_anom_f(r, v, mu)
+
+        # print(new_dict_obj)
+
+    return new_dict_obj
+
+def jpl_body_request(body_code, time='2000-Jan-01 00:00:00'):
+
+    api_url = 'https://ssd.jpl.nasa.gov/api/horizons.api'
+    api_url += "?format=json&EPHEM_TYPE=VECTORS&OBJ_DATA=NO"
+    api_url += f"&COMMAND='{body_code}'"
+    api_url += f"&CENTER='*@sun'"
+    api_url += f"&TLIST='{time}'"
+
+    # Help query:
+
+    try:
+        response = requests.get(api_url)
+
+        # Check if the request was successful (status code 200)
+        if response.status_code == 200:
+
+            # The response content will contain the data returned by the API
+            data = response.json()  # Assuming the response is in JSON format
+
+            with open('request_output.json', "w") as json_file:
+                json.dump(data, json_file)
+            
+            # extract name of target body
+            name_start = data['result'].find('Target body name:')
+            target_name = data['result'][name_start+18:name_start+49].rstrip()
+
+            elements_start = data['result'].find('$$SOE')
+            elements_end = data['result'].find('$$EOE')
+
+            data['result'] = data['result'][elements_start+6:elements_end]
+            data['result'] = data['result'].split('\n')
+
+            vector_set = [data['result']]
+            body_dict = create_json_obj(vector_set)
+            body_dict['Name'] = target_name
+
+        else:
+            print(f"Request failed with status code: {response.status_code}")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request exception: {e}")
+
+    return body_dict
 
 def main():
 
