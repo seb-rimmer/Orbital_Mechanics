@@ -1,3 +1,14 @@
+"""
+
+File: video_of_earth_and_didymos.py
+Author: Seb
+Date: 2024-09-10
+Description: This script shows an animation of the Didymos and Earth orbits round the sun from the launch of the Hera mission in 
+             Oct-24 to arrival in Dec-26. The file bodies_output_static.json contains the vectors and orbital elements of the relevant
+             bodies at the launch date.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -6,7 +17,7 @@ import cv2
 
 import json
 import datetime
-import jpl_horizons_planets_mapper_copy
+from functions import r_and_v_as_function_of_t
 
 def update(frame, x, y, fig, ax, output_video):
     ax.clear()
@@ -29,13 +40,13 @@ def main():
     # ----------------------------
 
     # Path to the JSON file
-    file_path = r"C:\Users\Sebastian.Rimmer\OneDrive - ESA\Documents\Learning\Orbital_Mechanics\output\bodies_output.json"
+    file_path = r"C:\Users\Sebastian.Rimmer\OneDrive - ESA\Documents\Learning\Orbital_Mechanics\output\bodies_output_static.json"
 
     # Load the JSON file into a dictionary
     with open(file_path, 'r') as f:
         data_dict = json.load(f)
         earth = data_dict[0]
-        didymos = data_dict[1]
+        didymos = data_dict[2]
 
     # Print the dictionary
     # print(json.dumps(earth))
@@ -57,8 +68,8 @@ def main():
 
     for i in range(dt_days):
         
-        r1_vector_e, v1_vector_e = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_earth, v0_vector_earth, 24*3600)
-        r1_vector_d, v1_vector_d = jpl_horizons_planets_mapper_copy.r_and_v_as_function_of_t(mu_sun, r0_vector_didymos, v0_vector_didymos, 24*3600)
+        r1_vector_e, v1_vector_e = r_and_v_as_function_of_t(mu_sun, r0_vector_earth, v0_vector_earth, 24*3600)
+        r1_vector_d, v1_vector_d = r_and_v_as_function_of_t(mu_sun, r0_vector_didymos, v0_vector_didymos, 24*3600)
 
         x_e.append(r1_vector_e[0])
         y_e.append(r1_vector_e[1])
@@ -84,6 +95,7 @@ def main():
     scat_d = ax.scatter(x_d[0], y_d[0], color='gray')
     
     start_day = 0
+    ax.set_title("Animation of Earth and Didymos Position from \nLaunch (12-Oct-24) to Arrival (01-Dec-26)")
     title = ax.text(2e8, 2e8, f'time = {start_day} days')
     
     plt.axis('equal')
