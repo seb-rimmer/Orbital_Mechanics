@@ -31,7 +31,6 @@ def angle_between_vectors(r1, r2):
 def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
-    print(a)
     a2 = 2*asin(sqrt(s/(2*a)))
     b2 = 2*asin(sqrt((s-c)/(2*a)))
 
@@ -42,7 +41,6 @@ def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 def lamberts_time_equation_solver_upper_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
-    print(a)
     a2 = 2*pi - 2*asin(sqrt(s/(2*a)))
     b2 = 2*asin(sqrt((s-c)/(2*a)))
 
@@ -187,7 +185,7 @@ def main():
 
     # Some examples to test
     # example var can be j, v, or m
-    example = 'j'    
+    example = 'm'    
     if example == 'j':
         # Jupiter
         theta_d = 147
@@ -204,7 +202,7 @@ def main():
     
     elif example == 'm':
         # Mars
-        theta_d = 75
+        theta_d = 175
         r0 = 1
         rf = 1.524
         tf_days = 210
@@ -328,12 +326,13 @@ def main():
 
     # METHOD 1 - fsolve with python
     # -------------------------------
-    # x0 = [a0, alpha0, beta0]
-    # if tf > tm:
-    #     solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
-    # else:
-    #     solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
-    # diff =1
+    x0 = [a0, alpha0, beta0]
+    if tf > tm:
+        solutions = fsolve(lamberts_time_equation_solver_upper_branch, x0, args=(tf, s, c))
+    else:
+        solutions = fsolve(lamberts_time_equation_solver_lower_branch, x0, args=(tf, s, c))
+    
+    a = solutions[0]
 
     # METHOD 2 - our own newton's iteration method
     # -------------------------------
@@ -360,7 +359,7 @@ def main():
 
     # METHOD 3 - bisection algorithm
     # -------------------------------
-    a = newton_bisection_solver(a0, s, c, tf, branch, biggerThetaTransfer)
+    # a = newton_bisection_solver(a0, s, c, tf, branch, biggerThetaTransfer)
     
     # Final alpha and beta values corresponding to calculated sma
     alpha = 2*asin(sqrt(s/(2*a)))
