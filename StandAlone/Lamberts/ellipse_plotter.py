@@ -110,7 +110,7 @@ def plot_transfer(r2, sma, theta):
     # ax.add_patch(target)
 
     # Add actual trajectory (index index points of transfer ellipses)
-    # Will never use the prograde option, so select and choose between prograde options
+    # Will never use the retrograde option, so select and choose between prograde options
     # Solution is a bit of a hack, probably a more elegant solution
     
     # euclidean distances for start with first ellipse
