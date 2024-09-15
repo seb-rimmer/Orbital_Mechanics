@@ -19,14 +19,15 @@ def plot_transfer(r2, sma, theta):
     r1 = 1
     r2 = np.linalg.norm(r2)
 
-    # this must definitely be correct
+    # Calculaing eccentricity
     e = (sma - 1) / sma
 
+    # Calculating semi-minor axis b using a point on the transfer ellipse (target body at r2)
     x_j = r2 * cos(theta) + sma*e
     y_j = r2 * sin(theta)
-
     b = sqrt((y_j)**2 * 1/(1 - (x_j**2 / sma**2)))
     
+    # These ellipse parameters characterise the 2 ellipses corresponding to 4 transfer arcs.
     print(f'a = {sma}')
     print(f'b = {b}')
     print(f'e = {e}')
@@ -50,7 +51,7 @@ def plot_transfer(r2, sma, theta):
     # ellipse = patches.Ellipse(ellipse_centre, 2*sma, 2*b, fill=False, color='b', linestyle='--')
     # ax.plot(x_traj, y_traj, color='blue')
 
-    # solve ellipses equations for the solutions of 2 possible focci
+    # Solve ellipses equations for the solutions of the 2 vacant focci
     p1 = (1, 0)
     p2 = (r2*cos(theta), r2*sin(theta))
     data = (p1, 1, p2, r2, sma)
@@ -72,25 +73,27 @@ def plot_transfer(r2, sma, theta):
     if tilt_ellipse2 < 0:
         tilt_ellipse2 += 2*pi
 
-    # Transfer ellipse 1 parameters
+    # Transfer ellipse 1 points
     actual_center1 = np.array(f1/2)
     angle1 = tilt_ellipse1
     theta1 = np.linspace(0, 2*pi, 10000)  # angle from 0 to 2*p
     x1, y1 = np.array([sma * cos(theta) for theta in theta1]), np.array([b1 * sin(theta) for theta in theta1])
 
+    # Calculating rotation and translation matrix to rotate points on ellipse by tilt angle (between focii)
     R = np.array([[cos(angle1), -sin(angle1)], [sin(angle1), cos(angle1)]])
-    x1, y1 = np.matmul(R, np.array([x1, y1]))
-    x1, y1 =  x1 + actual_center1[0], y1 + actual_center1[1]
-
-    # Transfer ellipse 2 parameters
+    t = np.array([actual_center1[0], actual_center1[1]])
+    x1, y1 = np.matmul(R, np.array([x1, y1])) + t[:, np.newaxis]
+    
+    # Transfer ellipse 2 points
     actual_center2 = np.array(f2/2)
     angle2 = tilt_ellipse2
     theta2 = np.linspace(0, 2*pi, 10000)  # angle from 0 to 2*p
     x2, y2 = np.array([sma * cos(theta) for theta in theta2]), np.array([b2 * sin(theta) for theta in theta2])
-
+    
+    # Calculating rotation and translation matrix to rotate points on ellipse by tilt angle (between focii)
     R = np.array([[cos(angle2), -sin(angle2)], [sin(angle2), cos(angle2)]])
-    x2, y2 = np.matmul(R, np.array([x2, y2]))
-    x2, y2 =  x2 + actual_center2[0], y2 + actual_center2[1]
+    t = np.array([actual_center2[0], actual_center2[1]])
+    x2, y2 = np.matmul(R, np.array([x2, y2])) +  + t[:, np.newaxis]
 
     # centre and focci positioning
     # ax.plot(ellipse_centre[0], ellipse_centre[1],  marker='*')
