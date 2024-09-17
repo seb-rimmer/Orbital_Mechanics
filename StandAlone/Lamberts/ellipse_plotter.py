@@ -11,6 +11,7 @@ class transfer_ellipse:
         def __init__(self, theta, r2, sma, name):
             
             self.name = name
+            self.r1 = np.array([1, 0])
             self.r2 = r2
             self.p1 = (1, 0)
             self.p2 = (r2*cos(theta), r2*sin(theta))
@@ -24,10 +25,10 @@ class transfer_ellipse:
     
         def calculate_second_focii(self):
             
-            points = (1, 1)
+            points = np.add(self.p1, self.p2)
             if self.name == 'b':
-                points = (-1, -1)
-            
+                points = -points
+
             self.f2 = fsolve(focci_solver, points, args=(self.p1, 1, self.p2, self.r2, self.sma))
 
         def calcualte_transformation_parameters(self):
@@ -81,10 +82,10 @@ def plot_transfer(r2, sma, theta, tf, tm):
     
     # Declare and define transfer ellipses 
 
-    # Ellipse A
+    # Ellipse A - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
     transfer_ellipse_a = transfer_ellipse(theta, r2, sma, 'a')
 
-    # Ellipse B
+    # Ellipse B - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
     transfer_ellipse_b = transfer_ellipse(theta, r2, sma, 'b')
     
     # Plot vectors
