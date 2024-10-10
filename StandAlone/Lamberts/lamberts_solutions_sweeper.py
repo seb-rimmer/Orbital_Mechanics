@@ -157,6 +157,63 @@ def lamberts_dv(r1, r2, theta, transfer_a):
 
     return dv1, dv2
 
+def plot_sma_tu(a_m, tm, tf, s, c, mu):
+
+    # Do sweep and plot for semimajor axis vs tof
+    # a_m = a_m * 1.1
+    # a_sweep = np.linspace(a_m, 1.5, 100)
+    a_sweep = np.concatenate((np.linspace(a_m, a_m*1.1, 100), np.linspace(a_m*1.1, a_m*2, 10)))
+
+    t_fx_top = np.array([])
+    t_fx_bottom = np.array([])
+
+    # Sweep bottom half
+    for a in a_sweep:
+        alpha0_sweep = 2 * asin( sqrt(  (s)   / (2*a) ) ) 
+        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
+        t_fx_bottom = np.append(t_fx_bottom, tm_i)
+
+    # Sweep top half
+    for a in a_sweep:
+        alpha0_sweep = 2*pi -  2 * asin( sqrt(  (s)   / (2*a) ) ) 
+        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
+        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
+        t_fx_top = np.append(t_fx_top, tm_i)
+
+    # convert time to years
+    # t_fx_top = np.divide(t_fx_top, 2*pi)
+    # t_fx_bottom = np.divide(t_fx_bottom, 2*pi)
+
+    #  Create a figure and axis
+    fig, ax = plt.subplots()
+    plt.plot(a_sweep, t_fx_bottom)
+    plt.plot(a_sweep, t_fx_top)    
+
+    # plot additional data for tm, am etc
+
+    x_lim = [a_m*0.9, a_sweep[-1]]
+    y_lim = [0, t_fx_top[-1]]
+    
+    plt.plot([a_m, a_m], [0, tm], 'r--', label=f'Minimum energy SmA: {a_m:.2f} AU')
+    plt.plot([0, a_m], [tm, tm], 'r--', label=f'Minimum energy SmA ToF: {tm:.2f} TU')
+    plt.plot([0, x_lim[1]], [tf, tf], 'g--', label=f'Chosen ToF: {tf:.2f}TU')
+
+    ax.set_xlim(x_lim[0], x_lim[1])
+    ax.set_ylim(y_lim[0], y_lim[1])
+
+    # Optional: Add labels and title
+    plt.xlabel('Semi-major axis (AU)')
+    plt.ylabel('Time of flight (TU)')
+    plt.title('Plotting semi-major axis sweep')
+    plt.legend()
+
+    # Show the plot
+    plt.grid()
+    # plt.show()
+
+    return 0
+
 def main():
 
     parser = argparse.ArgumentParser(description="A simple Python script that shows lamberts problem trajectories")
@@ -178,14 +235,14 @@ def main():
     # verbose = args.verbose
 
     # System constants
-    TU = (3.137 * 10**7) / (2*pi)
+    TU = (365.25 * 24 * 3600) / (2*pi)
     AU = 149_597_871  # km for 1 AU for canonical units
     DU = 1 * AU
     mu = 1
 
     # Some examples to test
     # example var can be j, v, or m
-    example = 'm'    
+    example = 'j'    
     if example == 'j':
         # Jupiter
         theta_d = 147
@@ -202,10 +259,10 @@ def main():
     
     elif example == 'm':
         # Mars
-        theta_d = 175
+        theta_d = 75
         r0 = 1
         rf = 1.524
-        tf_days = 210
+        tf_days = 115
 
     # Angle between vectors
     theta = theta_d * pi/180
@@ -237,7 +294,7 @@ def main():
     
     if tf_days > tp:
         # elliptic transfer orbit exists.
-        print(f'Elliptic transfer ellipse possible; min possible transfer time is {tp:3.2f} TU, chosen transfer time is: {tf_days * 2*pi/365.25:3.2f} TU.')
+        print(f'Elliptic transfer ellipse possible; min possible transfer time is {tp:3.3f} TU, chosen transfer time is: {tf_days * 2*pi/365.25:3.3f} TU.')
     else:
         # orbit transfer must be parabolic - we don't do that here
         print('Desired transfer time is less than minimum possible transfer time, transfer not possible.')
@@ -249,60 +306,10 @@ def main():
     # Step 4 - Compute the transfer time corresponding to the minimum semimajor axis transfer ellipse
     tm = sqrt(a_m**3 / mu) * (alpha0 - beta0 - (sin(alpha0) - sin(beta0)))
 
-    print(f"Minimum energy ellipse sma = {a_m}, corresponding tof: {tm:3.2f}, or  {tm*365.25/(2*pi):3.2f} days")
+    print(f"Minimum energy ellipse sma = {a_m}, corresponding tof: {tm:3.3f}, or  {tm*365.25/(2*pi):3.3f} days")
 
-    # Do sweep and plot for semimajor axis vs tof
-    # a_m = a_m * 1.1
-    a_sweep = np.linspace(a_m, 1.5, 100)
-    a_sweep = np.concatenate((np.linspace(a_m, a_m*1.1, 100), np.linspace(a_m*1.1, a_m*1.5, 10)))
-
-    t_fx_top = np.array([])
-    t_fx_bottom = np.array([])
-
-    # Sweep bottom half
-    for a in a_sweep:
-        alpha0_sweep = 2 * asin( sqrt(  (s)   / (2*a) ) ) 
-        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
-        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
-        t_fx_bottom = np.append(t_fx_bottom, tm_i)
-
-    # Sweep top half
-    for a in a_sweep:
-        alpha0_sweep = 2*pi -  2 * asin( sqrt(  (s)   / (2*a) ) ) 
-        beta0_sweep  = 2 * asin( sqrt(  (s-c) / (2*a) ) )
-        tm_i = sqrt(a**3 / mu) * (alpha0_sweep - beta0_sweep - (sin(alpha0_sweep) - sin(beta0_sweep)))
-        t_fx_top = np.append(t_fx_top, tm_i)
-
-    # convert time to years
-    # t_fx_top = np.divide(t_fx_top, 2*pi)
-    # t_fx_bottom = np.divide(t_fx_bottom, 2*pi)
-
-    #  Create a figure and axis
-    fig, ax = plt.subplots()
-    plt.plot(a_sweep, t_fx_bottom)
-    plt.plot(a_sweep, t_fx_top)    
-
-    # plot additional data for tm, am etc
-
-    x_lim = [a_m*0.9, a_sweep[-1]*1.5]
-    y_lim = [0, t_fx_top[-1]]
-    
-    plt.plot([a_m, a_m], [0, tm], 'r--', label=f'Minimum energy SmA: {a_m:.2f} AU')
-    plt.plot([0, a_m], [tm, tm], 'r--', label=f'Minimum energy SmA ToF: {tm:.2f} TU')
-    plt.plot([0, x_lim[1]], [tf, tf], 'g--', label=f'Chosen ToF: {tf:.2f}TU')
-
-    ax.set_xlim(x_lim[0], x_lim[1])
-    ax.set_ylim(y_lim[0], y_lim[1])
-
-    # Optional: Add labels and title
-    plt.xlabel('Semi-major axis (AU)')
-    plt.ylabel('Time of flight (TU)')
-    plt.title('Plotting semi-major axis sweep')
-    plt.legend()
-
-    # Show the plot
-    plt.grid()
-    # plt.show()
+    # Plot SMA / TU sweep relation
+    plot_sma_tu(a_m, tm, tf, s, c, mu)
 
     # Step 5 - Determine initial values of alpha and beta
     biggerThetaTransfer = (theta >= pi)
@@ -384,6 +391,7 @@ def main():
 
         dv1, dv2 = lamberts_dv(r1, r2, theta, a)
         
+        print(f"Solved sma = {a}")
         print(f"Departure dV = {dv1} DU/TU  /  dV = {dv1 * DU/TU} km/s")
         print(f"Arrival dV   = {dv2} DU/TU  /  dV = {dv2 * DU/TU} km/s")
         print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
@@ -392,12 +400,12 @@ def main():
 
         # calculate eccentricity for transfer orbit (from Eq 5.40 in prussing)
         p = sin((alpha+beta)/2)**2 * (4*a *(s - r1)*(s - r2)) / (c**2)
-        e = sqrt(1 - p/a) 
-        plot_transfer(rf, a, theta)
+        plot_transfer(rf, a, theta, tf, tm)
     
     else:
         print("Final values are below; solver could not find solution (step size too big maybe)")
 
+    pass
 
 if __name__ == '__main__':
     main()
