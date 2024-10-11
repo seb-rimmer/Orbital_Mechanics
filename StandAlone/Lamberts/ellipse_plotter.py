@@ -6,46 +6,57 @@ from scipy.optimize import fsolve
 
 class transfer_ellipse:
         
-        f1, f2 = [1, 0], None
-
-        def __init__(self, theta, r2, sma, name):
+        def __init__(self, theta, r2, sma, f_star):
             
-            self.name = name
             self.r1 = np.array([1, 0])
             self.r2 = r2
+            self.theta = theta
             self.p1 = (1, 0)
-            self.p2 = (r2*cos(theta), r2*sin(theta))
+            self.p2 = (r2*cos(self.theta), r2*sin(self.theta))
             self.sma = sma
-            self.e = np.linalg.norm(self.f1)/(2*sma)
+            self.f1 = np.array([0, 0])
+            self.f2 = f_star
+            self.e = np.linalg.norm(self.f2 - self.f1)/(2*sma)
             self.b = self.sma * sqrt(1 - self.e**2)
 
-            self.calculate_second_focii()
             self.calcualte_transformation_parameters()
             self.calculate_cart_coords()
-    
-        def calculate_second_focii(self):
-            
-            points = np.add(self.p1, self.p2)
-            if self.name == 'b':
-                points = -points
-
-            self.f2 = fsolve(focci_solver, points, args=(self.p1, 1, self.p2, self.r2, self.sma))
 
         def calcualte_transformation_parameters(self):
             
             self.tilt_ellipse = atan2(self.f2[1], self.f2[0])
-            if self.tilt_ellipse < 0:
-                self.tilt_ellipse += 2*pi
 
             self.ellipse_centre = np.array(self.f2/2)
-            self.R = np.array([[cos(self.tilt_ellipse), -sin(self.tilt_ellipse)], [sin(self.tilt_ellipse), cos(self.tilt_ellipse)]])
+            self.R = np.array([
+                                [cos(self.tilt_ellipse), -sin(self.tilt_ellipse)], 
+                                [sin(self.tilt_ellipse),  cos(self.tilt_ellipse)]
+                              ])
             self.translate = np.array([self.ellipse_centre[0], self.ellipse_centre[1]])
 
         def calculate_cart_coords(self):
             theta1 = np.linspace(0, 2*pi, 10000)  # angle from 0 to 2*p
             x1, y1 = np.array([self.sma * cos(theta) for theta in theta1]), np.array([self.b * sin(theta) for theta in theta1])
-            self.x_cart, self.y_cart = np.matmul(self.R, np.array([x1, y1])) + self.translate[:, np.newaxis]
+            self.x_cart_trans, self.y_cart_trans = np.matmul(self.R, np.array([x1, y1])) + self.translate[:, np.newaxis]
+            self.x_cart, self.y_cart = x1, y1
 
+        def calculate_long_arc_values(self):
+            
+            # Arc points in radial coordinates using ellipse eqaution
+            theta_arc = np.linspace(pi-self.tilt_ellipse, pi-self.tilt_ellipse+self.theta, 1000)
+            r = (self.sma*(1 - self.e**2)) / (1 + self.e*np.cos(theta_arc))
+
+            # converting to cartesian
+            x, y = r*np.cos(theta_arc), r*np.sin(theta_arc)
+
+            # rotating and transforming
+            # self.R = np.array([[cos(-self.tilt_ellipse), -sin(-self.tilt_ellipse)], [sin(-self.tilt_ellipse), cos(-self.tilt_ellipse)]])
+            # x, y = np.matmul(self.R, np.array([x, y])) + self.translate[:, np.newaxis]
+        # 
+            return x, y
+
+        def calculate_short_arc_values(self):
+
+            return x, y
 
 def focci_solver(p, *data):
     p1, r1, p2, r2, a = data
@@ -59,14 +70,43 @@ def theta_positive_from_x(x, y):
         theta += 2 * pi
     return theta
 
-def plot_transfer(r2, sma, theta, tf, tm):
+def find_circle_intersection(x1, y1, r1, x2, y2, r2):
+    
+    # Distance between the centers
+    d = sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    l = (d**2 - r2**2 + r1**2) / (2*d)
+    h = sqrt(r1**2 - l**2)
+    
+    f1_int1 = np.array([[l], [+h]])
+    f2_int1 = np.array([[l], [-h]])
 
-    #  Create a figure and axis
-    fig, ax = plt.subplots()
+    R_theta = atan2((y2- y1), (x2 - x1))
+    R= np.array([ [np.cos(R_theta), -np.sin(R_theta)],
+                  [np.sin(R_theta), np.cos(R_theta)]
+                ])
+    T = np.array([1, 0])
+
+    f1 = np.matmul(R, f1_int1) + T[:, np.newaxis]
+    f2 = np.matmul(R, f2_int1) + T[:, np.newaxis]
+
+    return f1.flatten(), f2.flatten()
+
+def plot_transfer(r2, sma, theta, tf, tm):
 
     # Calcualte the ellipse parameters (center, width, height, and angle)
     r1 = 1
     r2 = np.linalg.norm(r2)
+
+    #  Create a figure and axis
+    plt.ion()
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    plt.grid()
+    lim = max(1, r2)*1.2
+    ax.set_xlim(-lim, lim)
+    ax.set_ylim(-lim, lim)
+
+    plt.draw()
 
     center = (0, 0)
     earth_pos = (1, 0)
@@ -74,29 +114,41 @@ def plot_transfer(r2, sma, theta, tf, tm):
 
     # Plot Earth orbit
     earth_orbit = patches.Circle(center, r1, fill=False, color='k', linestyle='--')
-    earth = patches.Circle(earth_pos, 0.1, fill=True, color='g')
 
     # Plot target orbit
     target_orbit = patches.Circle(center, r2, fill=False, color='k', linestyle='--')
-    target = patches.Circle(target_pos, 0.1, fill=True, color='orange')
     
+    ax.add_patch(earth_orbit)
+    ax.add_patch(target_orbit)
+    plt.draw()
+
+    # Plot bodies position vectors
+    ax.plot([0, cos(theta)*r2], [0, sin(theta)*r2], label='My Line', color='red', linestyle='-', marker='')
+    ax.plot([0, 1], [0, 0], label='My Line', color='red', linestyle='-', marker='')
+    # 
+    # Plot ellipse property 2*a -r circles
+    # ax.add_patch(patches.Circle(earth_pos, 2*sma-r1, fill=False, color='gray'))
+    # ax.add_patch(patches.Circle(target_pos, 2*sma-r2, fill=False, color='gray'))
+
+    # Calculate two vacant focii points based on intersection of above circles
+    f1, f2 = find_circle_intersection(earth_pos[0], earth_pos[1], 2*sma-r1, target_pos[0], target_pos[1], 2*sma-r2)
+    
+    ax.plot(f1[0], f1[1], '*', color='r')
+    ax.plot(f2[0], f2[1], '*', color='r')
     # Declare and define transfer ellipses 
 
     # Ellipse A - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
-    transfer_ellipse_a = transfer_ellipse(theta, r2, sma, 'a')
+    transfer_ellipse_a = transfer_ellipse(theta, r2, sma, f1)
+
+    # ax.plot(transfer_ellipse_a.x_cart, transfer_ellipse_a.y_cart, color='blue', linestyle='--', marker='')
+    ax.plot(transfer_ellipse_a.x_cart_trans, transfer_ellipse_a.y_cart_trans, color='blue', linestyle='--', marker='')
+    plt.draw()
 
     # Ellipse B - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
-    transfer_ellipse_b = transfer_ellipse(theta, r2, sma, 'b')
-    
-    # Plot vectors
-    ax.plot([0, cos(theta)*r2], [0, sin(theta)*r2], label='My Line', color='red', linestyle='-', marker='')
-    ax.plot([0, 1], [0, 0], label='My Line', color='red', linestyle='-', marker='')
+    transfer_ellipse_b = transfer_ellipse(theta, r2, sma, f2)
 
-    # Add the ellipse to the axis
-    ax.plot(transfer_ellipse_a.x_cart, transfer_ellipse_a.y_cart, color='blue', linestyle='--', marker='')
-    ax.plot(transfer_ellipse_b.x_cart, transfer_ellipse_b.y_cart, color='blue', linestyle='--', marker='')
-    ax.plot(transfer_ellipse_a.f2[0],transfer_ellipse_a.f2[1],  marker='*', color='red')
-    ax.plot(transfer_ellipse_b.f2[0],transfer_ellipse_b.f2[1],  marker='*', color='red')
+    ax.plot(transfer_ellipse_b.x_cart_trans, transfer_ellipse_b.y_cart_trans, color='blue', linestyle='--', marker='')
+    plt.draw()
 
     ax.add_patch(earth_orbit)
     # ax.add_patch(earth)
@@ -104,14 +156,13 @@ def plot_transfer(r2, sma, theta, tf, tm):
     # ax.add_patch(target)
 
     #TODO: Add how to choose the transfer arcs to plot in red, corresponding to tf
+    # The two retrograde arcs correspond to:
+    #       - Long arc of Ellipse A (where second focii is in <pi region between r1 and r2)
+    #       - Short arc of Ellipse B (focii in >pi region between r1 r2 vectors)
 
-    # Set the aspect ratio of the plot to be equal
-    ax.set_aspect('equal')
-
-    # Set the axis limits to show the entire ellipse
-    lim = (max(r1, r2)*1.2)
-    ax.set_xlim(-lim, lim)
-    ax.set_ylim(-lim, lim)
+    # Plot long arc of ellipse a
+    # x, y = transfer_ellipse_a.calculate_long_arc_values()
+    # ax.plot(x, y, 'r--')
 
     # Optional: Add labels and title
     plt.xlabel('X-axis')
@@ -119,7 +170,7 @@ def plot_transfer(r2, sma, theta, tf, tm):
     plt.title('Plotting an Ellipse')
 
     # Show the plot
-    plt.grid()
+    plt.ioff()
     plt.show()
 
 def main():
