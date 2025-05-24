@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from math import cos, sin, pi, sqrt, ceil, atan2
+from math import cos, sin, pi, sqrt, ceil, atan2, acos
 import numpy as np
 from scipy.optimize import fsolve
 
@@ -26,6 +26,9 @@ class transfer_ellipse:
             
             self.tilt_ellipse = atan2(self.f2[1], self.f2[0])
 
+            if self.tilt_ellipse < 0 and self.tilt_ellipse > -pi:
+                self.tilt_ellipse += pi 
+
             self.ellipse_centre = np.array(self.f2/2)
             self.R = np.array([
                                 [cos(self.tilt_ellipse), -sin(self.tilt_ellipse)], 
@@ -39,25 +42,32 @@ class transfer_ellipse:
             self.x_cart_trans, self.y_cart_trans = np.matmul(self.R, np.array([x1, y1])) + self.translate[:, np.newaxis]
             self.x_cart, self.y_cart = x1, y1
 
-        def calculate_long_arc_values(self):
+        def transfer_arc_vals(self):
             
-            # Arc points in radial coordinates using ellipse eqaution
-            theta_arc = np.linspace(pi-self.tilt_ellipse, pi-self.tilt_ellipse+self.theta, 1000)
-            r = (self.sma*(1 - self.e**2)) / (1 + self.e*np.cos(theta_arc))
+            a, b, e = self.sma, self.b, self.e
+            h, k = self.ellipse_centre
 
-            # converting to cartesian
-            x, y = r*np.cos(theta_arc), r*np.sin(theta_arc)
+            vect1 = np.array([1, 0])
+            vect2 = np.array(-self.f2) / np.linalg.norm(self.f2)
+            start_f = acos(np.dot(vect1, vect2))
 
-            # rotating and transforming
-            # self.R = np.array([[cos(-self.tilt_ellipse), -sin(-self.tilt_ellipse)], [sin(-self.tilt_ellipse), cos(-self.tilt_ellipse)]])
-            # x, y = np.matmul(self.R, np.array([x, y])) + self.translate[:, np.newaxis]
-        # 
-            return x, y
+            # Determine true anomaly range
+            
+            f = np.linspace(start_f, start_f+self.theta, 100)
+            
+            r = (a * (1 - e**2)) / (1 + e*np.cos(f))
 
-        def calculate_short_arc_values(self):
+            x_ellipse_plane, y_ellipse_plane = np.cos(f)*r, np.sin(f)*r
 
-            return x, y
+            self.R = np.array([
+                                [cos(self.tilt_ellipse-pi), -sin(self.tilt_ellipse-pi)], 
+                                [sin(self.tilt_ellipse-pi),  cos(self.tilt_ellipse-pi)]
+                              ])
+            x_cart_trans, y_cart_trans = np.matmul(self.R, np.array([x_ellipse_plane, y_ellipse_plane]))
 
+            return x_cart_trans, y_cart_trans
+            # return x_ellipse_plane, y_ellipse_plane
+        
 def focci_solver(p, *data):
     p1, r1, p2, r2, a = data
     x, y = p
@@ -132,39 +142,54 @@ def plot_transfer(r2, sma, theta, tf, tm):
 
     # Calculate two vacant focii points based on intersection of above circles
     f1, f2 = find_circle_intersection(earth_pos[0], earth_pos[1], 2*sma-r1, target_pos[0], target_pos[1], 2*sma-r2)
-    
     ax.plot(f1[0], f1[1], '*', color='r')
-    ax.plot(f2[0], f2[1], '*', color='r')
+    # ax.plot(f2[0], f2[1], '*', color='m')
+
     # Declare and define transfer ellipses 
 
     # Ellipse A - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
     transfer_ellipse_a = transfer_ellipse(theta, r2, sma, f1)
 
-    # ax.plot(transfer_ellipse_a.x_cart, transfer_ellipse_a.y_cart, color='blue', linestyle='--', marker='')
-    ax.plot(transfer_ellipse_a.x_cart_trans, transfer_ellipse_a.y_cart_trans, color='blue', linestyle='--', marker='')
+    ax.plot(transfer_ellipse_a.x_cart_trans, transfer_ellipse_a.y_cart_trans, color='b', linestyle='--', label='Transfer ellipse A')
     plt.draw()
 
     # Ellipse B - defined as with the second vacant focii in the > pi part of r1 and r2 vectors
     transfer_ellipse_b = transfer_ellipse(theta, r2, sma, f2)
 
-    ax.plot(transfer_ellipse_b.x_cart_trans, transfer_ellipse_b.y_cart_trans, color='blue', linestyle='--', marker='')
+    # ax.plot(transfer_ellipse_b.x_cart_trans, transfer_ellipse_b.y_cart_trans, color='m', linestyle='--', label='Transfer ellipse B')
     plt.draw()
-
-    ax.add_patch(earth_orbit)
-    # ax.add_patch(earth)
-    ax.add_patch(target_orbit)
-    # ax.add_patch(target)
 
     #TODO: Add how to choose the transfer arcs to plot in red, corresponding to tf
     # The two retrograde arcs correspond to:
     #       - Long arc of Ellipse A (where second focii is in <pi region between r1 and r2)
     #       - Short arc of Ellipse B (focii in >pi region between r1 r2 vectors)
+    
+    if tf > tm: # long arcs
+
+        # Always going to choose prograde option 
+        if transfer_ellipse_a.long_arc_vals[0][0] > 0:
+            trans_ellipse = transfer_ellipse_a
+        else:
+            trans_ellipse = transfer_ellipse_b
+    
+    else:    # short arcs
+
+        # Always going to choose prograde option
+        angle = atan2(transfer_ellipse_a.f2[1], transfer_ellipse_a.f2[0])
+        if angle < 0:
+            angle =  2*pi + angle
+        if angle > theta:
+            trans_ellipse = transfer_ellipse_a
+        else:
+            trans_ellipse = transfer_ellipse_b
+
+    x_transfer, y_transfer = trans_ellipse.transfer_arc_vals()
 
     # Plot long arc of ellipse a
-    # x, y = transfer_ellipse_a.calculate_long_arc_values()
-    # ax.plot(x, y, 'r--')
+    ax.plot(x_transfer, y_transfer, 'r')
 
     # Optional: Add labels and title
+    ax.legend()
     plt.xlabel('X-axis')
     plt.ylabel('Y-axis')
     plt.title('Plotting an Ellipse')

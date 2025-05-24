@@ -210,7 +210,7 @@ def plot_sma_tu(a_m, tm, tf, s, c, mu):
 
     # Show the plot
     plt.grid()
-    # plt.show()
+    plt.show()
 
     return 0
 
@@ -255,7 +255,7 @@ def main():
         theta_d = 135
         r0 = 1
         rf = 0.723
-        tf_days = 400
+        tf_days = 337.6
     
     elif example == 'm':
         # Mars
@@ -318,7 +318,7 @@ def main():
     else:
         beta = -beta0
 
-    # which branch; upper is false, lowwer is true
+    # which branch; upper is false, lower is true
     branch = (tf <= tm)
     if branch:
         alpha = alpha0
@@ -397,9 +397,6 @@ def main():
         print(f"Total dV     = {dv1 + dv2} DU/TU  /  dV = {(dv1+dv2) * DU/TU} km/s")
 
         # Step 9 - Plot trajectories, start points and end points
-
-        # calculate eccentricity for transfer orbit (from Eq 5.40 in prussing)
-        p = sin((alpha+beta)/2)**2 * (4*a *(s - r1)*(s - r2)) / (c**2)
         plot_transfer(rf, a, theta, tf, tm)
     
     else:

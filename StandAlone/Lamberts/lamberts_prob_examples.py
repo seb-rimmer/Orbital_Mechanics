@@ -32,9 +32,14 @@ def lamberts_time_equation_solver_lower_branch(vars, tf, s, c):
 
     a, alpha, beta = [x for x in vars]
     
-    a2 = 2*asin(sqrt(s/(2*a)))
-    b2 = 2*asin(sqrt((s-c)/(2*a)))
-
+    try:
+        a2 = 2*asin(sqrt(s/(2*a)))
+        b2 = 2*asin(sqrt((s-c)/(2*a)))
+    
+    except ValueError:
+        print("Value error raised. Value of s/(2*a) is > 1")
+        return 0
+    
     return [alpha - a2,
             beta - b2,
             tf - (a**(3/2))*(a2-b2-(sin(a2)-sin(b2)))]
@@ -141,7 +146,7 @@ def main():
     
     if tf > tp:
         # elliptic transfer orbit exists.
-        print(f'Elliptic transfer ellipse possible; min possible transfer time is {tp:3.2f} TU, chosen transfer time is: {tf_days/365.25:3.2f} TU.')
+        print(f'Elliptic transfer ellipse possible; min possible transfer time is {tp:3.2f} TU, chosen transfer time is: {tf:3.2f} TU.')
     else:
         # orbit transfer must be parabolic - we don't do that here
         print('Desired transfer time is less than minimum possible transfer time, transfer not possible.')
